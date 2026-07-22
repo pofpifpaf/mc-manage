@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"minecraft-manager/internal/config"
 	"os"
 )
 
@@ -24,7 +25,14 @@ func run() error {
 
 	switch command {
 	case "start":
-		fmt.Printf("Starting server %q\n", server)
+		cfg, err := config.Load(server)
+		if err != nil {
+			return err
+		}
+
+		fmt.Println("Loaded config:")
+		fmt.Printf("%+v\n", *cfg)
+
 	default:
 		return fmt.Errorf("unknown command %q", command)
 	}
