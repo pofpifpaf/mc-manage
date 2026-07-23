@@ -2,7 +2,7 @@ package main
 
 import (
 	"fmt"
-	"minecraft-manager/internal/config"
+	"minecraft-manager/internal/launcher"
 	"os"
 )
 
@@ -25,13 +25,7 @@ func run() error {
 
 	switch command {
 	case "start":
-		cfg, err := config.Load(server)
-		if err != nil {
-			return err
-		}
-
-		fmt.Println("Loaded config:")
-		fmt.Printf("%+v\n", *cfg)
+		return launcher.Start(server)
 
 	default:
 		return fmt.Errorf("unknown command %q", command)
