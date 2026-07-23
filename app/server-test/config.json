@@ -1,6 +1,0 @@
-{
-    "name": "survival",
-    "java": "21",
-    "memory": "4G",
-    "jar": "server.jar"
-}

@@ -1,6 +1,8 @@
 {
     "name": "",
     "java": "21",
+    "type": "vanilla",
+    "version": "1.16.5",
     "memory": "4G",
     "jar": "server.jar"
 }

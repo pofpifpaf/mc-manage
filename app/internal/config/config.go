@@ -8,10 +8,12 @@ import (
 )
 
 type Config struct {
-	Name   string `json:"name"`
-	Java   string `json:"java"`
-	Memory string `json:"memory"`
-	Jar    string `json:"jar"`
+	Name    string `json:"name"`
+	Type    string `json:"type"`
+	Version string `json:"version"`
+	Java    string `json:"java"`
+	Memory  string `json:"memory"`
+	Jar     string `json:"jar"`
 }
 
 func (c *Config) Validate() error {

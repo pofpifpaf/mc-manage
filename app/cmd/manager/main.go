@@ -16,7 +16,6 @@ func main() {
 
 func run() error {
 
-
 	switch os.Args[1] {
 
 	case "start":
@@ -26,10 +25,10 @@ func run() error {
 		return launcher.Start(os.Args[2])
 
 	case "create":
-		if len(os.Args) != 3 {
-			return fmt.Errorf("usage: manager create <server>")
+		if len(os.Args) != 5 {
+			return fmt.Errorf("usage: manager create <server> <type> <version>")
 		}
-		return create.Create(os.Args[2])
+		return create.Create(os.Args[2], os.Args[3], os.Args[4])
 
 	default:
 		return fmt.Errorf("unknown command %q", os.Args[1])

@@ -5,10 +5,11 @@ import (
 	"minecraft-manager/internal/config"
 	"minecraft-manager/internal/templates"
 	"minecraft-manager/internal/paths"
+	"minecraft-manager/internal/download"
 	"os"
 )
 
-func Create(name string) error {
+func Create(name, serverType, version string) error {
 	serverDir := paths.Server(name)
 
 	fmt.Printf("Creating server %q\n", name)
@@ -34,10 +35,22 @@ func Create(name string) error {
 	}
 
 	cfg.Name = name
+	cfg.Version = version
+	cfg.Type = serverType
 
 	fmt.Printf("Saving config file %q\n", name)
 	if err := config.Save(name, cfg); err != nil {
 		return err
+	}
+
+	switch serverType {
+	case "vanilla":
+		err = download.DownloadVanilla(cfg.Version, paths.Jar(name, cfg.Jar))
+		if err != nil {
+			return err
+		}
+	default:
+		fmt.Printf("%q, Unsupported type\n", serverType)
 	}
 
 	fmt.Printf("Created server %q\n", name)
