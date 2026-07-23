@@ -9,15 +9,15 @@ import (
 	"os/exec"
 )
 
-func Start(server string) error {
+func Build(server string) (*exec.Cmd, error) {
 	cfg, err := config.Load(server)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	javaPath, err := java.Find(cfg.Java)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	serverDir := paths.Server(server)
@@ -25,7 +25,7 @@ func Start(server string) error {
 	jarPath := paths.Jar(server, cfg.Jar)
 
 	if _, err := os.Stat(jarPath); err != nil {
-		return fmt.Errorf("jar not found: %s", jarPath)
+		return nil, fmt.Errorf("jar not found: %s", jarPath)
 	}
 
 	cmd := exec.Command(
@@ -39,18 +39,9 @@ func Start(server string) error {
 
 	cmd.Dir = serverDir
 
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
-	cmd.Stdin = os.Stdin
-
 	fmt.Println("Starting", cfg.Name)
 	fmt.Println("Java:", javaPath)
 	fmt.Println("Directory:", serverDir)
 
-	err = cmd.Run()
-	if err != nil {
-		return fmt.Errorf("minecraft exited with error: %w", err)
-	}
-
-	return nil
+	return cmd, nil
 }

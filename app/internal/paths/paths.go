@@ -5,6 +5,7 @@ import "path/filepath"
 const (
 	ServerRoot = "/servers"
 	JavaRoot   = "/opt/java"
+	SocketPath = "/tmp/minecraft-manager.sock"
 )
 
 func Server(name string) string {
