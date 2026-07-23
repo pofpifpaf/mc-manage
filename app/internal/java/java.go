@@ -3,16 +3,11 @@ package java
 import (
 	"fmt"
 	"os"
-	"path/filepath"
+	"minecraft-manager/internal/paths"
 )
 
 func Find(version string) (string, error) {
-	path := filepath.Join(
-		"/opt/java",
-		version,
-		"bin",
-		"java",
-	)
+	path := paths.Java(version)
 
 	info, err := os.Stat(path)
 	if err != nil {

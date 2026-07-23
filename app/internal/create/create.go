@@ -4,12 +4,12 @@ import (
 	"fmt"
 	"minecraft-manager/internal/config"
 	"minecraft-manager/internal/templates"
+	"minecraft-manager/internal/paths"
 	"os"
-	"path/filepath"
 )
 
 func Create(name string) error {
-	serverDir := filepath.Join("/server", name)
+	serverDir := paths.Server(name)
 
 	fmt.Printf("Creating server %q\n", name)
 

@@ -10,7 +10,7 @@ RUN go build -o manager ./cmd/manager
 # Runtime stage
 FROM debian:bookworm-slim
 
-WORKDIR /server
+WORKDIR /
 
 RUN apt-get update && \
     apt-get install -y \
@@ -50,7 +50,5 @@ ENV JAVA_HOME=/opt/java/21
 ENV PATH="${JAVA_HOME}/bin:${PATH}"
 
 COPY --from=builder /app/manager /usr/local/bin/manager
-
-# COPY --from=builder /app/server-test /server/server-test
 
 CMD ["tail", "-f", "/dev/null"]

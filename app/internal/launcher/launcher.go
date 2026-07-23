@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"minecraft-manager/internal/config"
 	"minecraft-manager/internal/java"
+	"minecraft-manager/internal/paths"
 	"os"
 	"os/exec"
-	"path/filepath"
 )
 
 func Start(server string) error {
@@ -20,9 +20,9 @@ func Start(server string) error {
 		return err
 	}
 
-	serverDir := filepath.Join("server", server)
+	serverDir := paths.Server(server)
 
-	jarPath := filepath.Join(serverDir, cfg.Jar)
+	jarPath := paths.Jar(server, cfg.Jar)
 
 	if _, err := os.Stat(jarPath); err != nil {
 		return fmt.Errorf("jar not found: %s", jarPath)

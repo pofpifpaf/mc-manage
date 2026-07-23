@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
-	"path/filepath"
+	"minecraft-manager/internal/paths"
 )
 
 type Config struct {
@@ -32,7 +32,7 @@ func (c *Config) Validate() error {
 }
 
 func Load(server string) (*Config, error) {
-	path := filepath.Join("/server", server, "config.json")
+	path := paths.Config(server)
 
 	data, err := os.ReadFile(path)
 	if err != nil {
@@ -54,7 +54,7 @@ func Load(server string) (*Config, error) {
 }
 
 func Save(server string, cfg *Config) error {
-	path := filepath.Join("/server", server, "config.json")
+	path := paths.Config(server)
 
 	data, err := json.MarshalIndent(cfg, "", "    ")
 	if err != nil {
