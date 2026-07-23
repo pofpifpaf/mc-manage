@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"minecraft-manager/internal/launcher"
+	"minecraft-manager/internal/create"
 	"os"
 )
 
@@ -14,21 +15,24 @@ func main() {
 }
 
 func run() error {
-	args := os.Args
 
-	if len(args) != 3 {
-		return fmt.Errorf("usage: manager start <server>")
-	}
 
-	command := args[1]
-	server := args[2]
+	switch os.Args[1] {
 
-	switch command {
 	case "start":
-		return launcher.Start(server)
+		if len(os.Args) != 3 {
+			return fmt.Errorf("usage: manager start <server>")
+		}
+		return launcher.Start(os.Args[2])
+
+	case "create":
+		if len(os.Args) != 3 {
+			return fmt.Errorf("usage: manager create <server>")
+		}
+		return create.Create(os.Args[2])
 
 	default:
-		return fmt.Errorf("unknown command %q", command)
+		return fmt.Errorf("unknown command %q", os.Args[1])
 	}
 
 	return nil

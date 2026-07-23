@@ -15,9 +15,6 @@ type Config struct {
 }
 
 func (c *Config) Validate() error {
-	if c.Name == "" {
-		return fmt.Errorf("missing name")
-	}
 
 	if c.Java == "" {
 		return fmt.Errorf("missing java version")
@@ -54,4 +51,15 @@ func Load(server string) (*Config, error) {
 	}
 
 	return &cfg, nil
+}
+
+func Save(server string, cfg *Config) error {
+	path := filepath.Join("/server", server, "config.json")
+
+	data, err := json.MarshalIndent(cfg, "", "    ")
+	if err != nil {
+		return err
+	}
+
+	return os.WriteFile(path, data, 0644)
 }
