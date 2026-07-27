@@ -1,15 +1,15 @@
 package daemon
 
 import (
-	"bufio"
+	"encoding/json"
 	"fmt"
+	"minecraft-manager/internal/paths"
+	"minecraft-manager/internal/protocol"
 	"net"
 	"os"
-	"strings"
-	"minecraft-manager/internal/paths"
 )
 
-func Listen(manager *Manager) error {
+func (d *Daemon) Listen() error {
 	// Remove old socket if it exists
 	os.Remove(paths.SocketPath)
 
@@ -25,56 +25,151 @@ func Listen(manager *Manager) error {
 	for {
 		conn, err := listener.Accept()
 		if err != nil {
-			return err
+			fmt.Println("accept:", err)
+			continue
 		}
 
-		go handleConnection(conn, manager)
+		fmt.Println("accepted")
+		go d.handleConnection(conn)
 	}
 }
 
-func handleConnection(conn net.Conn, manager *Manager) {
+func (d *Daemon) listenScreen() error {
+	// Remove old socket if it exists
+	os.Remove(paths.ScreenSocketPath)
+
+	listener, err := net.Listen("unix", paths.ScreenSocketPath)
+	if err != nil {
+		return err
+	}
+
+	defer listener.Close()
+
+	fmt.Println("Listening on", paths.ScreenSocketPath)
+
+	for {
+		conn, err := listener.Accept()
+		if err != nil {
+			fmt.Println("accept:", err)
+			continue
+		}
+
+		fmt.Println("Listener accepted")
+
+		go d.handleScreenConn(conn)
+	}
+}
+
+func (d *Daemon) handleScreenConn(conn net.Conn) {
+
+	fmt.Println("Received screen request")
+
+	var req protocol.Request
+	if err := json.NewDecoder(conn).Decode(&req); err != nil {
+		_ = json.NewEncoder(conn).Encode(protocol.Response{
+			OK:      false,
+			Message: "invalid screen request",
+		})
+		return
+	}
+
+	if req.Command != "SCREEN" || req.Server == "" {
+		_ = json.NewEncoder(conn).Encode(protocol.Response{
+			OK:      false,
+			Message: "usage: SCREEN <server>",
+		})
+		return
+	}
+
+	server, ok := d.manager.Get(req.Server)
+	if !ok {
+		_ = json.NewEncoder(conn).Encode(protocol.Response{
+			OK:      false,
+			Message: fmt.Sprintf("server %q not running", req.Server),
+		})
+		return
+	}
+
+	_ = json.NewEncoder(conn).Encode(protocol.Response{
+		OK:      true,
+		Message: "hello!",
+	})
+
+	screenClient := NewScreenClient(conn)
+	go server.Attach(screenClient)
+}
+
+func (d *Daemon) handleConnection(conn net.Conn) {
 	defer conn.Close()
 
-	reader := bufio.NewReader(conn)
+	// reader := bufio.NewReader(conn)
 
-	message, err := reader.ReadString('\n')
-	if err != nil {
+	decoder := json.NewDecoder(conn)
+
+	var req protocol.Request
+
+	if err := decoder.Decode(&req); err != nil {
 		return
 	}
 
-	parts := strings.Fields(message)
-
-	if len(parts) == 0 {
-		return
-	}
-
-	switch parts[0] {
+	switch req.Command {
 
 	case "PING":
-		fmt.Fprintln(conn, "PONG")
+		json.NewEncoder(conn).Encode(
+			protocol.Response{
+				OK:      true,
+				Message: "PONG",
+			},
+		)
 
 	case "LIST":
-		for _, server := range manager.List() {
-			fmt.Fprintln(conn, server.Name)
-		}
-	
+		servers := d.manager.List()
+
+		json.NewEncoder(conn).Encode(
+			protocol.Response{
+				OK:      true,
+				Message: "list",
+				Data:    servers,
+			},
+		)
+
 	case "START":
 
-		if len(parts) != 2 {
-			fmt.Fprintln(conn, "usage: START <server>")
+		if req.Server == "" {
+			json.NewEncoder(conn).Encode(
+				protocol.Response{
+					OK:      false,
+					Message: "usage START <server>",
+				},
+			)
 			return
 		}
 
-		err := manager.Start(parts[1])
+		err := d.manager.Start(req.Server)
 
 		if err != nil {
-			fmt.Fprintln(conn, err)
+			json.NewEncoder(conn).Encode(
+				protocol.Response{
+					OK:      false,
+					Message: err.Error(),
+				},
+			)
 			return
 		}
 
-		fmt.Fprintln(conn, "OK")
+		json.NewEncoder(conn).Encode(
+			protocol.Response{
+				OK:      true,
+				Message: "Starting server",
+			},
+		)
 
 	default:
-		fmt.Fprintln(conn, "UNKNOWN COMMAND")
+		json.NewEncoder(conn).Encode(
+			protocol.Response{
+				OK:      false,
+				Message: "UNKNOWN COMMAND",
+			},
+		)
 	}
 }

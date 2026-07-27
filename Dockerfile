@@ -1,5 +1,5 @@
 # Build stage
-FROM golang:1.24 AS builder
+FROM golang:1.25 AS builder
 
 WORKDIR /app
 
@@ -51,4 +51,5 @@ ENV PATH="${JAVA_HOME}/bin:${PATH}"
 
 COPY --from=builder /app/manager /usr/local/bin/manager
 
-CMD ["tail", "-f", "/dev/null"]
+ENTRYPOINT ["manager"]
+CMD ["daemon"]

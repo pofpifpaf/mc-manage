@@ -2,21 +2,45 @@ package daemon
 
 import (
 	"fmt"
+	"minecraft-manager/internal/client"
+	"minecraft-manager/internal/protocol"
 	"os"
 	"os/signal"
 	"syscall"
 )
 
-func Run() error {
+type Daemon struct {
+	manager *Manager
+}
 
-	manager := NewManager()
+func New() *Daemon {
+	return &Daemon{
+		manager: NewManager(),
+	}
+}
+
+func (d *Daemon) Run() error {
 
 	go func() {
-		if err := Listen(manager); err != nil {
-			fmt.Println("socket error:", err)
+		if err := d.Listen(); err != nil {
+			panic(err)
+		}
+	}()
+
+	go func() {
+		if err := d.listenScreen(); err != nil {
+			fmt.Println("screen listener error:", err)
 			os.Exit(1)
 		}
 	}()
+
+	if client.Send(
+		protocol.Request{
+			Command: "PING",
+		},
+	) == nil {
+		return fmt.Errorf("daemon already running")
+	}
 
 	fmt.Println("Minecraft manager daemon started")
 	fmt.Println("PID:", os.Getpid())
@@ -36,4 +60,3 @@ func Run() error {
 
 	return nil
 }
-
