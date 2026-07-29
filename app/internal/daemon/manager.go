@@ -1,14 +1,12 @@
 package daemon
 
 import (
-	"bufio"
 	"fmt"
 	"minecraft-manager/internal/launcher"
 	"minecraft-manager/internal/ringbuffer"
 	"net"
 	"os"
 	"os/exec"
-	"strings"
 	"sync"
 
 	"github.com/creack/pty"
@@ -84,18 +82,17 @@ func (m *Manager) Start(name string) error {
 	}
 
 	go func() {
-
-		reader := bufio.NewReader(server.PTY)
+		buf := make([]byte, 4096)
 
 		for {
-			line, err := reader.ReadString('\n')
+			n, err := server.PTY.Read(buf)
+			if n > 0 {
+				server.Broadcast(buf[:n])
+			}
 			if err != nil {
 				break
 			}
-
-			server.Broadcast(strings.TrimRight(line, "\r\n"))
 		}
-
 	}()
 
 	if err := m.Add(server); err != nil {
@@ -162,51 +159,52 @@ func (s *Server) readFromClient(c *ScreenClient) {
 }
 
 func (s *Server) Attach(c *ScreenClient) error {
-	fmt.Println("Attach called")
 
 	s.mu.Lock()
 	s.Clients[c] = struct{}{}
 	s.mu.Unlock()
 
 	for _, line := range s.Log.Snapshot() {
-		fmt.Println("sending:", line)
 		if _, err := fmt.Fprintf(c.Conn, "%s\r\n", line); err != nil {
 			fmt.Println("send failed:", err)
 			return err
 		}
 	}
 
-	fmt.Println("starting client reader")
 	go s.readFromClient(c)
 
 	return nil
 }
 
-func (s *Server) Broadcast(line string) {
-	s.Log.Add(line)
-
+func (s *Server) Broadcast(data []byte) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
 	for client := range s.Clients {
-		if _, err := fmt.Fprintf(client.Conn, "%s\r\n", line); err != nil {
-			_ = client.Conn.Close()
+		if _, err := client.Conn.Write(data); err != nil {
+			client.Conn.Close()
 			delete(s.Clients, client)
 		}
 	}
 }
 
 func (s *Server) readInput(c *ScreenClient) {
-	scanner := bufio.NewScanner(c.Conn)
+	defer func() {
+		delete(s.Clients, c)
+		c.Conn.Close()
+	}()
 
-	for scanner.Scan() {
-		fmt.Fprintln(s.PTY, scanner.Text())
+	// buf := make([]byte, 1024)
+
+	buf := make([]byte, 1)
+	for {
+		n, err := c.Conn.Read(buf)
+		if n > 0 {
+			fmt.Printf("received: %q\n", buf[:n])
+			s.PTY.Write(buf[:n])
+		}
+		if err != nil {
+			break
+		}
 	}
-	if err := scanner.Err(); err != nil {
-		fmt.Fprintln(os.Stderr, "error:", err)
-	}
-
-	delete(s.Clients, c)
-
-	c.Conn.Close()
 }

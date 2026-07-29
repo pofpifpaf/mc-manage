@@ -102,7 +102,8 @@ func Screen(server string) error {
 		_ = term.Restore(fd, oldState)
 	}()
 
-	fmt.Print("Attached. Press Ctrl+] to detach\r\n")
+	fmt.Print("Attached. Press Ctrl+[ to detach\r\n")
+	fmt.Print("-------------------------------------\r\n\r\n\r\n")
 
 	done := make(chan error, 2)
 
@@ -117,7 +118,7 @@ func Screen(server string) error {
 				return
 			}
 
-			// Ctrl+] detach
+			// Ctrl+[ detach
 			if n == 1 && buf[0] == 0x1d {
 				done <- nil
 				return

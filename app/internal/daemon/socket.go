@@ -29,7 +29,6 @@ func (d *Daemon) Listen() error {
 			continue
 		}
 
-		fmt.Println("accepted")
 		go d.handleConnection(conn)
 	}
 }
