@@ -10,6 +10,7 @@ import (
 	"net"
 	"os"
 	"strings"
+	"sync"
 
 	"golang.org/x/term"
 )
@@ -107,6 +108,9 @@ func Screen(server string) error {
 
 	done := make(chan error, 2)
 
+	var screenMu sync.Mutex
+	var line []byte
+
 	// Terminal -> server
 	go func() {
 		buf := make([]byte, 1)
@@ -123,18 +127,47 @@ func Screen(server string) error {
 				done <- nil
 				return
 			}
+			screenMu.Lock()
+			switch buf[0] {
+			case '\r', '\n':
+				conn.Write(append(line, '\n'))
+				line = line[:0]
+				redraw(line)
 
-			if _, err := conn.Write(buf[:n]); err != nil {
+			case 127: // Backspace
+				if len(line) > 0 {
+					line = line[:len(line)-1]
+					redraw(line)
+				}
+
+			default:
+				line = append(line, buf[0])
+				redraw(line)
+			}
+			screenMu.Unlock()
+		}
+	}()
+
+	go func() {
+		buf := make([]byte, 4096)
+
+		for {
+			n, err := conn.Read(buf)
+			if n > 0 {
+				screenMu.Lock()
+
+				fmt.Print("\r\033[2K")
+				os.Stdout.Write(buf[:n])
+				redraw(line)
+
+				screenMu.Unlock()
+			}
+
+			if err != nil {
 				done <- err
 				return
 			}
 		}
-	}()
-
-	// Server -> terminal
-	go func() {
-		_, err := io.Copy(os.Stdout, conn)
-		done <- err
 	}()
 
 	err = <-done
@@ -149,7 +182,20 @@ func Screen(server string) error {
 		return otherErr
 	}
 
+	fmt.Print("\r\033[2K")
+
+	fmt.Print("\nClosing screening session\n\n")
+
+	fmt.Print("\r\033[2K")
+
 	return nil
+}
+
+func redraw(line []byte) {
+	fmt.Print("\r\033[2K")
+
+	fmt.Print("> ")
+	os.Stdout.Write(line)
 }
 
 func isExpectedDisconnect(err error) bool {

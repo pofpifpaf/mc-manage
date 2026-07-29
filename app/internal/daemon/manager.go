@@ -87,6 +87,7 @@ func (m *Manager) Start(name string) error {
 		for {
 			n, err := server.PTY.Read(buf)
 			if n > 0 {
+				server.Log.Add(string(buf[:n]))
 				server.Broadcast(buf[:n])
 			}
 			if err != nil {
@@ -105,13 +106,16 @@ func (m *Manager) Start(name string) error {
 	go func() {
 		err := cmd.Wait()
 
-		m.Remove(name)
-
 		if err != nil {
 			fmt.Printf("%s exited: %v\n", name, err)
+			send := fmt.Sprintf("\n----------- Server exited with error code %v, screen session can now be detached...\n", err)
+			server.Broadcast([]byte(send))
 		} else {
 			fmt.Printf("%s exited normally\n", name)
+			server.Broadcast([]byte("\n----------- Server exited normally, screen session can now be detached...\n"))
 		}
+
+		m.Remove(name)
 	}()
 
 	return nil
@@ -165,7 +169,7 @@ func (s *Server) Attach(c *ScreenClient) error {
 	s.mu.Unlock()
 
 	for _, line := range s.Log.Snapshot() {
-		if _, err := fmt.Fprintf(c.Conn, "%s\r\n", line); err != nil {
+		if _, err := fmt.Fprintf(c.Conn, "%s", line); err != nil {
 			fmt.Println("send failed:", err)
 			return err
 		}
@@ -193,8 +197,6 @@ func (s *Server) readInput(c *ScreenClient) {
 		delete(s.Clients, c)
 		c.Conn.Close()
 	}()
-
-	// buf := make([]byte, 1024)
 
 	buf := make([]byte, 1)
 	for {
