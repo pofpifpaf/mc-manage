@@ -7,7 +7,7 @@ import (
 	"strings"
 )
 
-func SetProperty(filename, key, value string) error {
+func SetServerProperty(filename, key, value string) error {
 	file, err := os.Open(filename)
 	if err != nil {
 		return err
@@ -46,7 +46,7 @@ func SetProperty(filename, key, value string) error {
 	return os.WriteFile(filename, []byte(output), 0644)
 }
 
-func GetParameter(filename, key string) (string, error) {
+func GetServerProperty(filename, key string) (string, error) {
 	file, err := os.Open(filename)
 	if err != nil {
 		return "", err

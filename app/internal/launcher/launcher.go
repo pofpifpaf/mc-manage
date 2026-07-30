@@ -9,15 +9,15 @@ import (
 	"os/exec"
 )
 
-func Build(server string) (*exec.Cmd, error) {
+func Build(server string) (*exec.Cmd, bool, error) {
 	cfg, err := config.Load(server)
 	if err != nil {
-		return nil, err
+		return nil, false, err
 	}
 
 	javaPath, err := java.Find(cfg.Java)
 	if err != nil {
-		return nil, err
+		return nil, false, err
 	}
 
 	serverDir := paths.Server(server)
@@ -25,7 +25,7 @@ func Build(server string) (*exec.Cmd, error) {
 	jarPath := paths.Jar(server, cfg.Jar)
 
 	if _, err := os.Stat(jarPath); err != nil {
-		return nil, fmt.Errorf("jar not found: %s", jarPath)
+		return nil, false, fmt.Errorf("jar not found: %s", jarPath)
 	}
 
 	cmd := exec.Command(
@@ -39,9 +39,7 @@ func Build(server string) (*exec.Cmd, error) {
 
 	cmd.Dir = serverDir
 
-	fmt.Println("Starting", cfg.Name)
-	fmt.Println("Java:", javaPath)
-	fmt.Println("Directory:", serverDir)
+	fmt.Printf("Starting %s, with Java Path: %s and Server Directory : %s \n", cfg.Name, javaPath, serverDir)
 
-	return cmd, nil
+	return cmd, cfg.AutomaticRestarts, nil
 }

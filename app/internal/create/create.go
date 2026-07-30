@@ -18,17 +18,15 @@ func Create(name, serverType, version string) error {
 		return fmt.Errorf("server %q already exists", name)
 	}
 
-	fmt.Printf("Creating server directory %q\n", serverDir)
 	if err := os.MkdirAll(serverDir, 0755); err != nil {
 		return err
 	}
 
-	fmt.Printf("Copying template %q\n", serverDir)
+	fmt.Printf("Copying template to %q\n", serverDir)
 	if err := templates.CopyTemplate(serverDir); err != nil {
 		return err
 	}
 
-	fmt.Printf("Loading default config %q\n", name)
 	cfg, err := config.Load(name)
 	if err != nil {
 		return err
@@ -38,7 +36,7 @@ func Create(name, serverType, version string) error {
 	cfg.Version = version
 	cfg.Type = serverType
 
-	fmt.Printf("Saving config file %q\n", name)
+	fmt.Printf("Saving config file with default config\n")
 	if err := config.Save(name, cfg); err != nil {
 		return err
 	}

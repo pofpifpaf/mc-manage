@@ -53,8 +53,6 @@ func (d *Daemon) listenScreen() error {
 			continue
 		}
 
-		fmt.Println("Listener accepted")
-
 		go d.handleScreenConn(conn)
 	}
 }

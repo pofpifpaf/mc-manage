@@ -86,8 +86,15 @@ func send(req protocol.Request) error {
 }
 
 func printList(servers []ServerInfo) {
+
+	if len(servers) == 0 {
+		fmt.Println("No Servers running")
+		return
+	}
+
 	for _, server := range servers {
-		fmt.Printf("%s, %s, %t\n", server.Name, server.Port, server.AutomaticRestarts)
+		dirSize, _ := paths.DirSize(paths.Server(server.Name))
+		fmt.Printf("%s, %s, %t, %d\n", server.Name, server.Port, server.AutomaticRestarts, dirSize)
 	}
 }
 

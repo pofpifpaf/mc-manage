@@ -12,6 +12,7 @@ import (
 	"os"
 	"os/exec"
 	"sync"
+	"time"
 
 	"github.com/creack/pty"
 )
@@ -24,6 +25,7 @@ type Server struct {
 	mu                sync.Mutex
 	Clients           map[*ScreenClient]struct{}
 	AutomaticRestarts bool
+	StartedAt         time.Time
 }
 
 type Manager struct {
@@ -62,7 +64,7 @@ func (m *Manager) List() []client.ServerInfo {
 
 	for _, server := range m.servers {
 
-		port, _ := config.GetParameter(paths.ServerProperties(server.Name), "server-port")
+		port, _ := config.GetServerProperty(paths.ServerProperties(server.Name), "server-port")
 
 		serv := client.ServerInfo{
 			Name:              server.Name,
@@ -82,13 +84,16 @@ func (m *Manager) Stop(name string) error {
 		return errors.New("server is not running")
 	}
 
-	server.PTY.Write([]byte("stop\n"))
+	fmt.Printf("Stopping server %s\n", name)
+
+	server.AutomaticRestarts = false
+	server.PTY.Write([]byte("\nstop\n"))
 
 	return nil
 }
 
 func (m *Manager) Start(name string) error {
-	cmd, err := launcher.Build(name)
+	cmd, autorestarts, err := launcher.Build(name)
 	if err != nil {
 		return err
 	}
@@ -99,11 +104,13 @@ func (m *Manager) Start(name string) error {
 	}
 
 	server := &Server{
-		Name:    name,
-		Cmd:     cmd,
-		PTY:     ptmx,
-		Log:     ringbuffer.New(1000),
-		Clients: make(map[*ScreenClient]struct{}),
+		Name:              name,
+		Cmd:               cmd,
+		PTY:               ptmx,
+		Log:               ringbuffer.New(1000),
+		Clients:           make(map[*ScreenClient]struct{}),
+		AutomaticRestarts: autorestarts,
+		StartedAt:         time.Now(),
 	}
 
 	go func() {
@@ -126,9 +133,10 @@ func (m *Manager) Start(name string) error {
 		return err
 	}
 
-	fmt.Printf("Started %s (PID %d)\n", name, cmd.Process.Pid)
+	fmt.Printf("%s started (PID %d)\n", name, cmd.Process.Pid)
 
 	go func() {
+
 		err := cmd.Wait()
 
 		if err != nil {
@@ -141,6 +149,14 @@ func (m *Manager) Start(name string) error {
 		}
 
 		m.Remove(name)
+
+		if server.AutomaticRestarts {
+			time.Sleep(5 * time.Second)
+			fmt.Printf("%s exited, automatic restart is turned on, restarting...\n", server.Name)
+			if err := m.Start(name); err != nil {
+				fmt.Println(err)
+			}
+		}
 	}()
 
 	return nil
@@ -168,7 +184,7 @@ func (m *Manager) SetParameter(server string, paramType string, data any) error 
 
 		port := data.(string)
 
-		err := config.SetProperty(paths.ServerProperties(server), "server-port", port)
+		err := config.SetServerProperty(paths.ServerProperties(server), "server-port", port)
 		if err != nil {
 			return err
 		}
