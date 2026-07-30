@@ -3,17 +3,19 @@ package config
 import (
 	"encoding/json"
 	"fmt"
-	"os"
 	"minecraft-manager/internal/paths"
+	"os"
 )
 
 type Config struct {
-	Name    string `json:"name"`
-	Type    string `json:"type"`
-	Version string `json:"version"`
-	Java    string `json:"java"`
-	Memory  string `json:"memory"`
-	Jar     string `json:"jar"`
+	Name              string `json:"name"`
+	Type              string `json:"type"`
+	Version           string `json:"version"`
+	Java              string `json:"java"`
+	Memory            string `json:"memory"`
+	Jar               string `json:"jar"`
+	AutomaticRestarts bool   `json:"autorestart"`
+	Port              int    `json:"port"`
 }
 
 func (c *Config) Validate() error {

@@ -1,7 +1,10 @@
 package daemon
 
 import (
+	"errors"
 	"fmt"
+	"minecraft-manager/internal/client"
+	"minecraft-manager/internal/config"
 	"minecraft-manager/internal/launcher"
 	"minecraft-manager/internal/ringbuffer"
 	"net"
@@ -13,12 +16,13 @@ import (
 )
 
 type Server struct {
-	Name    string
-	Cmd     *exec.Cmd
-	PTY     *os.File
-	Log     *ringbuffer.RingBuffer
-	mu      sync.Mutex
-	Clients map[*ScreenClient]struct{}
+	Name              string
+	Cmd               *exec.Cmd
+	PTY               *os.File
+	Log               *ringbuffer.RingBuffer
+	mu                sync.Mutex
+	Clients           map[*ScreenClient]struct{}
+	AutomaticRestarts bool
 }
 
 type Manager struct {
@@ -49,17 +53,32 @@ func (m *Manager) Add(server *Server) error {
 	return nil
 }
 
-func (m *Manager) List() []string {
+func (m *Manager) List() []client.ServerInfo {
 	m.mutex.Lock()
 	defer m.mutex.Unlock()
 
-	result := make([]string, 0, len(m.servers))
+	result := make([]client.ServerInfo, 0, len(m.servers))
 
 	for _, server := range m.servers {
-		result = append(result, server.Name)
+		serv := client.ServerInfo{
+			Name: server.Name,
+		}
+		result = append(result, serv)
 	}
 
 	return result
+}
+
+func (m *Manager) Stop(name string) error {
+	server, serverExists := m.Get(name)
+
+	if !serverExists {
+		return errors.New("server is not running")
+	}
+
+	server.PTY.Write([]byte("stop\n"))
+
+	return nil
 }
 
 func (m *Manager) Start(name string) error {
@@ -134,6 +153,54 @@ func (m *Manager) Get(name string) (*Server, bool) {
 
 	server, ok := m.servers[name]
 	return server, ok
+}
+
+func (m *Manager) SetParameter(server string, paramType string, data any) error {
+
+	switch paramType {
+	case "port":
+
+		var port int
+		if f, ok := data.(float64); ok {
+			port = int(f)
+		}
+
+		// TODO: First write to server.properties
+
+		cfg, err := config.Load(server)
+		if err != nil {
+			return err
+		}
+
+		cfg.Port = port
+
+		err = config.Save(server, cfg)
+		if err != nil {
+			return err
+		}
+
+	case "autorestart":
+
+		cfg, err := config.Load(server)
+		if err != nil {
+			return err
+		}
+
+		switch data.(string) {
+		case "false":
+			cfg.AutomaticRestarts = false
+		case "true":
+			cfg.AutomaticRestarts = true
+		default:
+			return fmt.Errorf("incompatible data")
+		}
+
+		err = config.Save(server, cfg)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 func NewScreenClient(conn net.Conn) *ScreenClient {

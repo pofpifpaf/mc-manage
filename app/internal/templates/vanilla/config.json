@@ -4,5 +4,7 @@
     "type": "vanilla",
     "version": "1.16.5",
     "memory": "4G",
-    "jar": "server.jar"
+    "jar": "server.jar",
+    "port": 25565,
+    "autorestart": false
 }

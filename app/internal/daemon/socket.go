@@ -101,8 +101,6 @@ func (d *Daemon) handleScreenConn(conn net.Conn) {
 func (d *Daemon) handleConnection(conn net.Conn) {
 	defer conn.Close()
 
-	// reader := bufio.NewReader(conn)
-
 	decoder := json.NewDecoder(conn)
 
 	var req protocol.Request
@@ -159,7 +157,59 @@ func (d *Daemon) handleConnection(conn net.Conn) {
 		json.NewEncoder(conn).Encode(
 			protocol.Response{
 				OK:      true,
-				Message: "Starting server",
+				Message: fmt.Sprintf("Starting server %s", req.Server),
+			},
+		)
+
+	case "STOP":
+
+		if req.Server == "" {
+			json.NewEncoder(conn).Encode(
+				protocol.Response{
+					OK:      false,
+					Message: "usage STOP <server>",
+				},
+			)
+			return
+		}
+
+		err := d.manager.Stop(req.Server)
+
+		if err != nil {
+			json.NewEncoder(conn).Encode(
+				protocol.Response{
+					OK:      false,
+					Message: err.Error(),
+				},
+			)
+			return
+		}
+
+		json.NewEncoder(conn).Encode(
+			protocol.Response{
+				OK:      true,
+				Message: fmt.Sprintf("Stop server command sent to server %s", req.Server),
+			},
+		)
+
+	case "SET":
+
+		err := d.manager.SetParameter(req.Server, req.Text, req.Data)
+
+		if err != nil {
+			json.NewEncoder(conn).Encode(
+				protocol.Response{
+					OK:      false,
+					Message: err.Error(),
+				},
+			)
+			return
+		}
+
+		json.NewEncoder(conn).Encode(
+			protocol.Response{
+				OK:      true,
+				Message: fmt.Sprintf("Set Parameter %s for server %s succesful", req.Text, req.Server),
 			},
 		)
 

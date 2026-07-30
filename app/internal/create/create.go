@@ -3,9 +3,9 @@ package create
 import (
 	"fmt"
 	"minecraft-manager/internal/config"
-	"minecraft-manager/internal/templates"
-	"minecraft-manager/internal/paths"
 	"minecraft-manager/internal/download"
+	"minecraft-manager/internal/paths"
+	"minecraft-manager/internal/templates"
 	"os"
 )
 

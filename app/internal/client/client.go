@@ -9,11 +9,22 @@ import (
 	"minecraft-manager/internal/protocol"
 	"net"
 	"os"
+	"strconv"
 	"strings"
 	"sync"
 
 	"golang.org/x/term"
 )
+
+type ServerInfo struct {
+	Name string
+}
+
+type ServerListResponse struct {
+	OK      bool         `json:"ok"`
+	Message string       `json:"message,omitempty"`
+	Data    []ServerInfo `json:"data"`
+}
 
 func Send(req protocol.Request) error {
 
@@ -34,25 +45,81 @@ func Send(req protocol.Request) error {
 		return err
 	}
 
-	fmt.Printf("Response: %q\n", resp.Message)
-
-	if req.Command == "LIST" {
-
-		raw := resp.Data.([]interface{})
-
-		servers := make([]string, len(raw))
-		for i, v := range raw {
-			servers[i] = v.(string)
-		}
-
-		fmt.Println(servers)
-	}
-
 	if !resp.OK {
 		return errors.New(resp.Message)
 	}
 
+	switch req.Command {
+
+	case "LIST":
+
+		raw := resp.Data.([]interface{})
+
+		servers := make([]ServerInfo, len(raw))
+
+		for i, v := range raw {
+			m := v.(map[string]interface{})
+
+			b, err := json.Marshal(m)
+			if err != nil {
+				return err
+			}
+
+			var server ServerInfo
+			if err := json.Unmarshal(b, &server); err != nil {
+				return err
+			}
+
+			servers[i] = server
+		}
+
+		for _, server := range servers {
+			fmt.Printf("%s\n", server.Name)
+		}
+
+	case "START", "STOP":
+		fmt.Printf("Daemon responded without error - %s\n", resp.Message)
+
+	default:
+		fmt.Printf("Response: %q\n", resp.Message)
+	}
+
 	return nil
+}
+
+func SetParameter(server string, arg1 string, arg2 string) error {
+
+	switch arg1 {
+	case "port":
+
+		port, err := strconv.Atoi(arg2)
+		if err != nil || (port < 0 || port > 65535) {
+			return errors.New("port number out of range, must be between 0 and 65535")
+		}
+
+		return Send(protocol.Request{
+			Command: "SET",
+			Server:  server,
+			Text:    arg1,
+			Data:    port,
+		})
+
+	case "autorestart":
+
+		if arg2 == "true" || arg2 == "false" {
+			return Send(protocol.Request{
+				Command: "SET",
+				Server:  server,
+				Text:    arg1,
+				Data:    arg2,
+			})
+		} else {
+			return errors.New("unrecognized argument to autorestart")
+		}
+
+	default:
+		return errors.New("Incorrect set paramater")
+	}
 }
 
 func Screen(server string) error {
@@ -72,8 +139,6 @@ func Screen(server string) error {
 		conn.Close()
 		return fmt.Errorf("send screen request: %w", err)
 	}
-
-	fmt.Println("Sent screen socket request")
 
 	var resp protocol.Response
 	if err := json.NewDecoder(conn).Decode(&resp); err != nil {
@@ -194,7 +259,7 @@ func Screen(server string) error {
 func redraw(line []byte) {
 	fmt.Print("\r\033[2K")
 
-	fmt.Print("> ")
+	fmt.Print("Server > ")
 	os.Stdout.Write(line)
 }
 

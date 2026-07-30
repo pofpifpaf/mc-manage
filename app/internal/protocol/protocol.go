@@ -10,6 +10,8 @@ type Request struct {
 	Type string `json:"type,omitempty"`
 
 	Text string `json:"text,omitempty"`
+
+	Data interface{} `json:"data,omitempty"`
 }
 
 type Response struct {
