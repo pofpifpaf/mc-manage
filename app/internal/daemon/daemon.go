@@ -3,7 +3,6 @@ package daemon
 import (
 	"fmt"
 	"minecraft-manager/internal/client"
-	"minecraft-manager/internal/protocol"
 	"os"
 	"os/signal"
 	"syscall"
@@ -34,11 +33,7 @@ func (d *Daemon) Run() error {
 		}
 	}()
 
-	if client.Send(
-		protocol.Request{
-			Command: "PING",
-		},
-	) == nil {
+	if client.PingDaemon() == nil {
 		return fmt.Errorf("daemon already running")
 	}
 

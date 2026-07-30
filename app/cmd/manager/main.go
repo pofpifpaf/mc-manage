@@ -5,7 +5,6 @@ import (
 	"minecraft-manager/internal/client"
 	"minecraft-manager/internal/create"
 	"minecraft-manager/internal/daemon"
-	"minecraft-manager/internal/protocol"
 	"os"
 )
 
@@ -24,12 +23,7 @@ func run() error {
 		if len(os.Args) != 3 {
 			return fmt.Errorf("usage: manager start <server>")
 		}
-		return client.Send(
-			protocol.Request{
-				Command: "START",
-				Server:  os.Args[2],
-			},
-		)
+		return client.StartServer(os.Args[2])
 
 	case "create":
 		if len(os.Args) != 5 {
@@ -42,18 +36,10 @@ func run() error {
 		return d.Run()
 
 	case "ping":
-		return client.Send(
-			protocol.Request{
-				Command: "PING",
-			},
-		)
+		return client.PingDaemon()
 
 	case "list":
-		return client.Send(
-			protocol.Request{
-				Command: "LIST",
-			},
-		)
+		return client.GetList()
 
 	case "screen":
 		if len(os.Args) != 3 {
@@ -65,12 +51,7 @@ func run() error {
 		if len(os.Args) != 3 {
 			return fmt.Errorf("usage: manager stop <server>")
 		}
-		return client.Send(
-			protocol.Request{
-				Command: "STOP",
-				Server:  os.Args[2],
-			},
-		)
+		return client.StopServer(os.Args[2])
 
 	case "set":
 		if len(os.Args) != 5 {
