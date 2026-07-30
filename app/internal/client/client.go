@@ -12,7 +12,9 @@ import (
 )
 
 type ServerInfo struct {
-	Name string
+	Name              string
+	Port              string
+	AutomaticRestarts bool
 }
 
 type ServerListResponse struct {
@@ -85,7 +87,7 @@ func send(req protocol.Request) error {
 
 func printList(servers []ServerInfo) {
 	for _, server := range servers {
-		fmt.Printf("%s\n", server.Name)
+		fmt.Printf("%s, %s, %t\n", server.Name, server.Port, server.AutomaticRestarts)
 	}
 }
 
@@ -137,7 +139,7 @@ func SetParameter(server string, arg1 string, arg2 string) error {
 			Command: "SET",
 			Server:  server,
 			Text:    arg1,
-			Data:    port,
+			Data:    arg2,
 		})
 
 	case "autorestart":

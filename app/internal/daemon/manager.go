@@ -6,6 +6,7 @@ import (
 	"minecraft-manager/internal/client"
 	"minecraft-manager/internal/config"
 	"minecraft-manager/internal/launcher"
+	"minecraft-manager/internal/paths"
 	"minecraft-manager/internal/ringbuffer"
 	"net"
 	"os"
@@ -60,8 +61,13 @@ func (m *Manager) List() []client.ServerInfo {
 	result := make([]client.ServerInfo, 0, len(m.servers))
 
 	for _, server := range m.servers {
+
+		port, _ := config.GetParameter(paths.ServerProperties(server.Name), "server-port")
+
 		serv := client.ServerInfo{
-			Name: server.Name,
+			Name:              server.Name,
+			Port:              port,
+			AutomaticRestarts: server.AutomaticRestarts,
 		}
 		result = append(result, serv)
 	}
@@ -160,12 +166,12 @@ func (m *Manager) SetParameter(server string, paramType string, data any) error 
 	switch paramType {
 	case "port":
 
-		var port int
-		if f, ok := data.(float64); ok {
-			port = int(f)
-		}
+		port := data.(string)
 
-		// TODO: First write to server.properties
+		err := config.SetProperty(paths.ServerProperties(server), "server-port", port)
+		if err != nil {
+			return err
+		}
 
 		cfg, err := config.Load(server)
 		if err != nil {

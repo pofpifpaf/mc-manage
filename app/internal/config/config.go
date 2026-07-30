@@ -15,7 +15,7 @@ type Config struct {
 	Memory            string `json:"memory"`
 	Jar               string `json:"jar"`
 	AutomaticRestarts bool   `json:"autorestart"`
-	Port              int    `json:"port"`
+	Port              string `json:"port"`
 }
 
 func (c *Config) Validate() error {

@@ -18,6 +18,10 @@ func Config(name string) string {
 	return filepath.Join(Server(name), "config.json")
 }
 
+func ServerProperties(name string) string {
+	return filepath.Join(Server(name), "server.properties")
+}
+
 func Jar(name, jar string) string {
 	return filepath.Join(Server(name), jar)
 }
