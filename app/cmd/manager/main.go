@@ -38,6 +38,9 @@ func run() error {
 	case "ping":
 		return client.PingDaemon()
 
+	case "ps":
+		return client.GetPS()
+
 	case "list":
 		return client.GetList()
 

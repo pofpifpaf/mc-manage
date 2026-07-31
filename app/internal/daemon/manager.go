@@ -26,6 +26,7 @@ type Server struct {
 	Clients           map[*ScreenClient]struct{}
 	AutomaticRestarts bool
 	StartedAt         time.Time
+	Port              string
 }
 
 type Manager struct {
@@ -56,7 +57,7 @@ func (m *Manager) Add(server *Server) error {
 	return nil
 }
 
-func (m *Manager) List() []client.ServerInfo {
+func (m *Manager) ListRunning() []client.ServerInfo {
 	m.mutex.Lock()
 	defer m.mutex.Unlock()
 
@@ -64,13 +65,16 @@ func (m *Manager) List() []client.ServerInfo {
 
 	for _, server := range m.servers {
 
-		port, _ := config.GetServerProperty(paths.ServerProperties(server.Name), "server-port")
+		cfg, _ := config.Load(server.Name)
 
 		serv := client.ServerInfo{
 			Name:              server.Name,
-			Port:              port,
+			Version:           cfg.Version,
+			JavaVersion:       cfg.Java,
+			Port:              server.Port,
 			AutomaticRestarts: server.AutomaticRestarts,
-			CreatedAt:         server.StartedAt,
+			StartedAt:         server.StartedAt,
+			Running:           true,
 		}
 		result = append(result, serv)
 	}
@@ -94,9 +98,17 @@ func (m *Manager) Stop(name string) error {
 }
 
 func (m *Manager) Start(name string) error {
-	cmd, autorestarts, err := launcher.Build(name)
+	cmd, autorestarts, port, err := launcher.Build(name)
 	if err != nil {
 		return err
+	}
+
+	portAlreadyUsed := false
+	for _, server := range m.servers {
+		portAlreadyUsed = portAlreadyUsed || (port == server.Port)
+	}
+	if portAlreadyUsed {
+		return fmt.Errorf("Port %s already used", port)
 	}
 
 	ptmx, err := pty.Start(cmd)
@@ -112,6 +124,7 @@ func (m *Manager) Start(name string) error {
 		Clients:           make(map[*ScreenClient]struct{}),
 		AutomaticRestarts: autorestarts,
 		StartedAt:         time.Now(),
+		Port:              port,
 	}
 
 	go func() {

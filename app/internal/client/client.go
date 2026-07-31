@@ -4,12 +4,14 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io/fs"
+	"minecraft-manager/internal/config"
 	"minecraft-manager/internal/paths"
 	"minecraft-manager/internal/protocol"
 	"net"
 	"os"
+	"path/filepath"
 	"strconv"
-	"text/tabwriter"
 	"time"
 )
 
@@ -17,31 +19,66 @@ type ServerInfo struct {
 	Name              string
 	Port              string
 	AutomaticRestarts bool
-	CreatedAt         time.Time
+	StartedAt         time.Time
+	Running           bool
+	Version           string
+	JavaVersion       string
 }
 
-type ServerListResponse struct {
+type ServerPSResponse struct {
 	OK      bool         `json:"ok"`
 	Message string       `json:"message,omitempty"`
 	Data    []ServerInfo `json:"data"`
 }
 
-func send(req protocol.Request) error {
+func makeServerInfoInterface(data []interface{}) ([]ServerInfo, error) {
 
+	servers := make([]ServerInfo, len(data))
+
+	for i, v := range data {
+		m := v.(map[string]interface{})
+
+		b, err := json.Marshal(m)
+		if err != nil {
+			return nil, err
+		}
+
+		var server ServerInfo
+		if err := json.Unmarshal(b, &server); err != nil {
+			return nil, err
+		}
+
+		servers[i] = server
+	}
+
+	return servers, nil
+}
+
+func sendProtocol(req protocol.Request) (protocol.Response, error) {
 	conn, err := net.Dial("unix", paths.SocketPath)
 	if err != nil {
-		return err
+		return protocol.Response{}, err
 	}
 
 	defer conn.Close()
 
 	if err := json.NewEncoder(conn).Encode(req); err != nil {
-		return err
+		return protocol.Response{}, err
 	}
 
 	var resp protocol.Response
 
 	if err := json.NewDecoder(conn).Decode(&resp); err != nil {
+		return protocol.Response{}, err
+	}
+
+	return resp, nil
+}
+
+func send(req protocol.Request) error {
+
+	resp, err := sendProtocol(req)
+	if err != nil {
 		return err
 	}
 
@@ -51,29 +88,11 @@ func send(req protocol.Request) error {
 
 	switch req.Command {
 
-	case "LIST":
+	case "PS":
 
-		raw := resp.Data.([]interface{})
+		servers, _ := makeServerInfoInterface(resp.Data.([]interface{}))
 
-		servers := make([]ServerInfo, len(raw))
-
-		for i, v := range raw {
-			m := v.(map[string]interface{})
-
-			b, err := json.Marshal(m)
-			if err != nil {
-				return err
-			}
-
-			var server ServerInfo
-			if err := json.Unmarshal(b, &server); err != nil {
-				return err
-			}
-
-			servers[i] = server
-		}
-
-		printList(servers)
+		printRunningServers(servers)
 
 	case "START", "STOP":
 		fmt.Printf("Daemon responded without error - %s\n", resp.Message)
@@ -81,42 +100,18 @@ func send(req protocol.Request) error {
 	case "SET":
 		fmt.Printf("SET - %s\n", resp.Message)
 
+	case "PING":
+		if resp.Message == "PONG" {
+			fmt.Println("Ping successful, daemon is running")
+		} else {
+			fmt.Println("Ping failure, received ", resp.Message)
+		}
+
 	default:
 		fmt.Printf("Response: %q\n", resp.Message)
 	}
 
 	return nil
-}
-
-func printList(servers []ServerInfo) {
-
-	fmt.Printf("\n")
-
-	if len(servers) == 0 {
-		fmt.Println("No servers running")
-		return
-	}
-
-	w := tabwriter.NewWriter(os.Stdout, 0, 0, 2, ' ', 0)
-	defer w.Flush()
-
-	fmt.Fprintln(w, "NAME\tPORT\tAUTO RESTART\tSIZE\tUPTIME")
-	fmt.Fprintln(w, "----\t----\t------------\t----\t------")
-
-	for _, server := range servers {
-		dirSize, _ := paths.DirSize(paths.Server(server.Name))
-		uptime := time.Since(server.CreatedAt).Round(time.Second)
-
-		fmt.Fprintf(
-			w,
-			"%s\t%s\t%t\t%s\t%s\n",
-			server.Name,
-			server.Port,
-			server.AutomaticRestarts,
-			dirSize,
-			uptime,
-		)
-	}
 }
 
 func StartServer(server string) error {
@@ -145,12 +140,67 @@ func PingDaemon() error {
 	)
 }
 
-func GetList() error {
+func GetPS() error {
 	return send(
 		protocol.Request{
-			Command: "LIST",
+			Command: "PS",
 		},
 	)
+}
+
+func GetList() error {
+
+	allServers, err := makeList()
+	if err != nil {
+		return err
+	}
+
+	printServerList(allServers)
+
+	return nil
+}
+
+func makeList() ([]ServerInfo, error) {
+
+	var result []ServerInfo
+
+	err := filepath.WalkDir(paths.ServerRoot, func(path string, d fs.DirEntry, err error) error {
+		if err != nil {
+			return err
+		}
+
+		if d.IsDir() {
+			if _, err := os.Stat(paths.Config(d.Name())); err == nil {
+
+				resp, _ := sendProtocol(protocol.Request{
+					Command: "CHECK",
+					Text:    d.Name(),
+				})
+				isServerRunning := resp.Data.(bool)
+
+				cfg, err := config.Load(d.Name())
+				if err == nil {
+					server := ServerInfo{
+						Name:              d.Name(),
+						Port:              cfg.Port,
+						AutomaticRestarts: cfg.AutomaticRestarts,
+						Running:           isServerRunning,
+						Version:           cfg.Version,
+						JavaVersion:       cfg.Java,
+					}
+					result = append(result, server)
+				}
+
+			}
+		}
+
+		return nil
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	return result, nil
 }
 
 func SetParameter(server string, arg1 string, arg2 string) error {
@@ -182,6 +232,20 @@ func SetParameter(server string, arg1 string, arg2 string) error {
 		} else {
 			return errors.New("unrecognized argument to autorestart")
 		}
+
+	case "version":
+
+		// Check if server is running, error if true
+		// Check for current version if it's the same
+		// Error if version is not downloadable
+		// Put old server.jar as server.jar.<version>.old -> Watch for customizable server.jar name
+		return fmt.Errorf("not implemented")
+
+	case "java":
+
+		//Check if server is running, error if true
+		//Check if java version is valid
+		return fmt.Errorf("not implemented")
 
 	default:
 		return errors.New("Incorrect set paramater")

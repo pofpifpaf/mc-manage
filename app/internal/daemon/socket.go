@@ -117,14 +117,26 @@ func (d *Daemon) handleConnection(conn net.Conn) {
 			},
 		)
 
-	case "LIST":
-		servers := d.manager.List()
+	case "PS":
+		servers := d.manager.ListRunning()
 
 		json.NewEncoder(conn).Encode(
 			protocol.Response{
 				OK:      true,
-				Message: "list",
+				Message: "ps",
 				Data:    servers,
+			},
+		)
+
+	case "CHECK":
+
+		_, isServerRunning := d.manager.Get(req.Text)
+
+		json.NewEncoder(conn).Encode(
+			protocol.Response{
+				OK:      true,
+				Message: req.Text,
+				Data:    isServerRunning,
 			},
 		)
 
