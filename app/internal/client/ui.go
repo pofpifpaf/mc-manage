@@ -11,6 +11,7 @@ import (
 func printRunningServers(servers []ServerInfo) {
 
 	fmt.Printf("\n")
+	defer fmt.Print("\n")
 
 	if len(servers) == 0 {
 		fmt.Println("No servers running")
@@ -44,6 +45,7 @@ func printRunningServers(servers []ServerInfo) {
 func printServerList(servers []ServerInfo) {
 
 	fmt.Printf("\n")
+	defer fmt.Print("\n")
 
 	if len(servers) == 0 {
 		fmt.Println("No servers found, to be considered valid, a server needs a config.json file")

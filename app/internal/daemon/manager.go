@@ -225,10 +225,14 @@ func (m *Manager) SetParameter(server string, paramType string, data any) error 
 		switch data.(string) {
 		case "false":
 			cfg.AutomaticRestarts = false
-			m.servers[server].AutomaticRestarts = false
+			if m.servers[server] != nil {
+				m.servers[server].AutomaticRestarts = false
+			}
 		case "true":
 			cfg.AutomaticRestarts = true
-			m.servers[server].AutomaticRestarts = true
+			if m.servers[server] != nil {
+				m.servers[server].AutomaticRestarts = true
+			}
 		default:
 			return fmt.Errorf("incompatible data")
 		}
