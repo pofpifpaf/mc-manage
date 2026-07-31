@@ -9,12 +9,15 @@ import (
 	"net"
 	"os"
 	"strconv"
+	"text/tabwriter"
+	"time"
 )
 
 type ServerInfo struct {
 	Name              string
 	Port              string
 	AutomaticRestarts bool
+	CreatedAt         time.Time
 }
 
 type ServerListResponse struct {
@@ -87,14 +90,32 @@ func send(req protocol.Request) error {
 
 func printList(servers []ServerInfo) {
 
+	fmt.Printf("\n")
+
 	if len(servers) == 0 {
-		fmt.Println("No Servers running")
+		fmt.Println("No servers running")
 		return
 	}
 
+	w := tabwriter.NewWriter(os.Stdout, 0, 0, 2, ' ', 0)
+	defer w.Flush()
+
+	fmt.Fprintln(w, "NAME\tPORT\tAUTO RESTART\tSIZE\tUPTIME")
+	fmt.Fprintln(w, "----\t----\t------------\t----\t------")
+
 	for _, server := range servers {
 		dirSize, _ := paths.DirSize(paths.Server(server.Name))
-		fmt.Printf("%s, %s, %t, %d\n", server.Name, server.Port, server.AutomaticRestarts, dirSize)
+		uptime := time.Since(server.CreatedAt).Round(time.Second)
+
+		fmt.Fprintf(
+			w,
+			"%s\t%s\t%t\t%s\t%s\n",
+			server.Name,
+			server.Port,
+			server.AutomaticRestarts,
+			dirSize,
+			uptime,
+		)
 	}
 }
 

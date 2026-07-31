@@ -70,6 +70,7 @@ func (m *Manager) List() []client.ServerInfo {
 			Name:              server.Name,
 			Port:              port,
 			AutomaticRestarts: server.AutomaticRestarts,
+			CreatedAt:         server.StartedAt,
 		}
 		result = append(result, serv)
 	}
@@ -211,8 +212,10 @@ func (m *Manager) SetParameter(server string, paramType string, data any) error 
 		switch data.(string) {
 		case "false":
 			cfg.AutomaticRestarts = false
+			m.servers[server].AutomaticRestarts = false
 		case "true":
 			cfg.AutomaticRestarts = true
+			m.servers[server].AutomaticRestarts = true
 		default:
 			return fmt.Errorf("incompatible data")
 		}
@@ -221,6 +224,7 @@ func (m *Manager) SetParameter(server string, paramType string, data any) error 
 		if err != nil {
 			return err
 		}
+
 	}
 	return nil
 }
