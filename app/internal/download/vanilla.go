@@ -3,9 +3,9 @@ package download
 import (
 	"encoding/json"
 	"fmt"
+	"io"
 	"net/http"
 	"os"
-	"io"
 )
 
 type versionManifest struct {
@@ -63,7 +63,7 @@ func VersionMetadataURL(version string) (string, error) {
 	return "", fmt.Errorf("minecraft version %s not found", version)
 }
 
-func DownloadVanilla(version, destination string) (error) {
+func DownloadVanilla(version, destination string) error {
 
 	fmt.Printf("Downloading %q for version %q\n", destination, version)
 
@@ -103,8 +103,6 @@ func DownloadVanilla(version, destination string) (error) {
 	if resp.StatusCode != http.StatusOK {
 		return fmt.Errorf("unexpected status %s", resp.Status)
 	}
-
-	fmt.Printf("Copying to %q\n", destination)
 
 	out, err := os.Create(destination)
 	if err != nil {

@@ -62,6 +62,9 @@ func run() error {
 		}
 		return client.SetParameter(os.Args[2], os.Args[3], os.Args[4])
 
+	case "import":
+		return fmt.Errorf("not yet implemented") // TODO
+
 	default:
 		return fmt.Errorf("unknown command %q", os.Args[1])
 	}

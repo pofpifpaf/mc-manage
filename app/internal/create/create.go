@@ -41,14 +41,8 @@ func Create(name, serverType, version string) error {
 		return err
 	}
 
-	switch serverType {
-	case "vanilla":
-		err = download.DownloadVanilla(cfg.Version, paths.Jar(name, cfg.Jar))
-		if err != nil {
-			return err
-		}
-	default:
-		fmt.Printf("%q, Unsupported type\n", serverType)
+	if err := download.DownloadJar(cfg); err != nil {
+		return err
 	}
 
 	fmt.Printf("Created server %q\n", name)

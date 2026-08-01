@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io/fs"
 	"minecraft-manager/internal/config"
+	"minecraft-manager/internal/download"
 	"minecraft-manager/internal/paths"
 	"minecraft-manager/internal/protocol"
 	"net"
@@ -160,6 +161,22 @@ func GetList() error {
 	return nil
 }
 
+func daemonIsServerRunning(name string) (bool, error) {
+	resp, err := sendProtocol(protocol.Request{
+		Command: "CHECK",
+		Text:    name,
+	})
+	if err != nil {
+		return false, err
+	}
+
+	if resp.OK && resp.Message == name {
+		return resp.Data.(bool), nil
+	} else {
+		return false, fmt.Errorf("Incorrect response from daemon")
+	}
+}
+
 func makeList() ([]ServerInfo, error) {
 
 	var result []ServerInfo
@@ -172,11 +189,7 @@ func makeList() ([]ServerInfo, error) {
 		if d.IsDir() {
 			if _, err := os.Stat(paths.Config(d.Name())); err == nil {
 
-				resp, _ := sendProtocol(protocol.Request{
-					Command: "CHECK",
-					Text:    d.Name(),
-				})
-				isServerRunning := resp.Data.(bool)
+				isServerRunning, _ := daemonIsServerRunning(d.Name())
 
 				cfg, err := config.Load(d.Name())
 				if err == nil {
@@ -235,11 +248,40 @@ func SetParameter(server string, arg1 string, arg2 string) error {
 
 	case "version":
 
-		// Check if server is running, error if true
-		// Check for current version if it's the same
-		// Error if version is not downloadable
-		// Put old server.jar as server.jar.<version>.old -> Watch for customizable server.jar name
-		return fmt.Errorf("not implemented")
+		isServerRunning, err := daemonIsServerRunning(server)
+		if err != nil {
+			return err
+		}
+		if isServerRunning {
+			return fmt.Errorf("Unable to change version, server %s is already running", server)
+		}
+
+		cfg, err := config.Load(server)
+		if err != nil {
+			return err
+		}
+
+		if cfg.Version == arg2 {
+			return fmt.Errorf("Version for server %s is already %s", server, arg2)
+		}
+
+		if err := download.ArchiveJarFile(cfg); err != nil {
+			fmt.Print("Unable to archive old jar file\n")
+		}
+
+		cfg.Version = arg2
+
+		if err := download.DownloadJar(cfg); err != nil {
+			return err
+		}
+
+		if err := config.Save(cfg.Name, cfg); err != nil {
+			return err
+		}
+
+		fmt.Printf("Successfully changed server %s to version %s", server, arg2)
+
+		return nil
 
 	case "java":
 
