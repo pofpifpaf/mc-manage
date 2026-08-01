@@ -6,7 +6,6 @@ import (
 	"minecraft-manager/internal/client"
 	"minecraft-manager/internal/config"
 	"minecraft-manager/internal/launcher"
-	"minecraft-manager/internal/paths"
 	"minecraft-manager/internal/ringbuffer"
 	"net"
 	"os"
@@ -194,27 +193,6 @@ func (m *Manager) Get(name string) (*Server, bool) {
 func (m *Manager) SetParameter(server string, paramType string, data any) error {
 
 	switch paramType {
-	case "port":
-
-		port := data.(string)
-
-		err := config.SetServerProperty(paths.ServerProperties(server), "server-port", port)
-		if err != nil {
-			return err
-		}
-
-		cfg, err := config.Load(server)
-		if err != nil {
-			return err
-		}
-
-		cfg.Port = port
-
-		err = config.Save(server, cfg)
-		if err != nil {
-			return err
-		}
-
 	case "autorestart":
 
 		cfg, err := config.Load(server)
@@ -241,6 +219,9 @@ func (m *Manager) SetParameter(server string, paramType string, data any) error 
 		if err != nil {
 			return err
 		}
+
+	default:
+		return fmt.Errorf("Unknown parameter for SET %s", paramType)
 
 	}
 	return nil

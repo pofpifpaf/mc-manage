@@ -7,6 +7,11 @@ import (
 	"strings"
 )
 
+const (
+	LevelNamePropertyKey = "level-name"
+	PortPropertyKey      = "server-port"
+)
+
 func SetServerProperty(filename, key, value string) error {
 	file, err := os.Open(filename)
 	if err != nil {

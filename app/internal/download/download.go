@@ -8,7 +8,7 @@ import (
 	"path/filepath"
 )
 
-func retrieveJarIfArchived(cfg *config.Config) (bool, error) {
+func RetrieveJarIfArchived(cfg *config.Config) (bool, error) {
 
 	jarArchivePath := filepath.Join(paths.Server(cfg.Name), cfg.Jar+"."+cfg.Version+".old")
 
@@ -25,7 +25,7 @@ func retrieveJarIfArchived(cfg *config.Config) (bool, error) {
 func DownloadJar(cfg *config.Config) error {
 	var err error
 
-	if isArchived, _ := retrieveJarIfArchived(cfg); isArchived {
+	if isArchived, _ := RetrieveJarIfArchived(cfg); isArchived {
 		fmt.Printf("Retrieved config file from archive for server %s and version %s\n", cfg.Name, cfg.Version)
 		return nil
 	}

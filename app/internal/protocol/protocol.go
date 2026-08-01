@@ -21,3 +21,8 @@ type Response struct {
 
 	Data interface{} `json:"data,omitempty"`
 }
+
+const (
+	setParameterPort        = "port"
+	setParameterAutoRestart = "autorestart"
+)

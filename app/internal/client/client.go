@@ -217,109 +217,144 @@ func makeList() ([]ServerInfo, error) {
 	return result, nil
 }
 
-func SetParameter(server string, arg1 string, arg2 string) error {
+func SetParameter(server, arg1, arg2 string) error {
+
+	fmt.Print("\n")
+	defer fmt.Print("\n")
+
+	isServerRunning, err := daemonIsServerRunning(server)
+	if err != nil {
+		return err
+	}
+	if isServerRunning && arg1 != "autorestart" {
+		return fmt.Errorf("Unable to use set server %s is already running", server)
+	}
 
 	switch arg1 {
 	case "port":
 
-		port, err := strconv.Atoi(arg2)
-		if err != nil || (port < 0 || port > 65535) {
-			return errors.New("port number out of range, must be between 0 and 65535")
+		if err := setServerPort(server, arg2); err != nil {
+			return err
 		}
-
-		return send(protocol.Request{
-			Command: "SET",
-			Server:  server,
-			Text:    arg1,
-			Data:    arg2,
-		})
 
 	case "autorestart":
 
-		if arg2 == "true" || arg2 == "false" {
-			return send(protocol.Request{
-				Command: "SET",
-				Server:  server,
-				Text:    arg1,
-				Data:    arg2,
-			})
-		} else {
-			return errors.New("unrecognized argument to autorestart")
+		if err := setServerAutoRestart(server, arg2); err != nil {
+			return err
 		}
 
 	case "version":
 
-		isServerRunning, err := daemonIsServerRunning(server)
-		if err != nil {
+		if err := setServerVersion(server, arg2); err != nil {
 			return err
 		}
-		if isServerRunning {
-			return fmt.Errorf("Unable to change version, server %s is already running", server)
-		}
-
-		cfg, err := config.Load(server)
-		if err != nil {
-			return err
-		}
-
-		if cfg.Version == arg2 {
-			return fmt.Errorf("Version for server %s is already %s", server, arg2)
-		}
-
-		if err := download.ArchiveJarFile(cfg); err != nil {
-			fmt.Print("Unable to archive old jar file\n")
-		}
-
-		cfg.Version = arg2
-
-		if err := download.DownloadJar(cfg); err != nil {
-			return err
-		}
-
-		if err := config.Save(cfg.Name, cfg); err != nil {
-			return err
-		}
-
-		fmt.Printf("Successfully changed server %s to version %s", server, arg2)
-
-		return nil
 
 	case "java":
 
-		isServerRunning, err := daemonIsServerRunning(server)
-		if err != nil {
+		if err := setJavaVersion(server, arg2); err != nil {
 			return err
 		}
-		if isServerRunning {
-			return fmt.Errorf("Unable to change java version, server %s is already running", server)
-		}
-
-		if _, err := java.Find(arg2); err != nil {
-			return err
-		}
-
-		cfg, err := config.Load(server)
-		if err != nil {
-			return err
-		}
-
-		cfg.Java = arg2
-
-		if err := config.Save(cfg.Name, cfg); err != nil {
-			return err
-		}
-
-		fmt.Printf("Successfully changed server %s to java version %s\n", server, arg2)
-
-		return nil
 
 	case "world":
 
-		fmt.Printf("arg2 = %s\n", arg2)
-
-		return nil
+		if err := setWorldName(server, arg2); err != nil {
+			return err
+		}
 
 	default:
 		return errors.New("Incorrect set paramater")
 	}
+
+	fmt.Printf("Successfully changed parameter %s for server %s to %q\n", arg1, server, arg2)
+
+	return nil
+}
+
+func setServerPort(name, port string) error {
+
+	portInt, err := strconv.Atoi(port)
+	if err != nil || (portInt < 0 || portInt > 65535) {
+		return errors.New("port number out of range, must be between 0 and 65535")
+	}
+
+	err = config.SetServerProperty(paths.ServerProperties(name), "server-port", port)
+	if err != nil {
+		return err
+	}
+
+	cfg, err := config.Load(name)
+	if err != nil {
+		return err
+	}
+
+	cfg.Port = port
+
+	return config.Save(name, cfg)
+}
+
+func setServerAutoRestart(name, autoRestart string) error {
+	if autoRestart == "true" || autoRestart == "false" {
+		return send(protocol.Request{
+			Command: "SET",
+			Server:  name,
+			Text:    "autorestart",
+			Data:    autoRestart,
+		})
+	} else {
+		return errors.New("unrecognized argument to autorestart")
+	}
+}
+
+func setServerVersion(name, serverVersion string) error {
+	cfg, err := config.Load(name)
+	if err != nil {
+		return err
+	}
+
+	oldServerVersion := cfg.Version
+
+	if cfg.Version == serverVersion {
+		return fmt.Errorf("Version for server %s is already %s", name, serverVersion)
+	}
+
+	if err := download.ArchiveJarFile(cfg); err != nil {
+		fmt.Print("Unable to archive old jar file\n")
+	}
+
+	cfg.Version = serverVersion
+
+	if err := download.DownloadJar(cfg); err != nil {
+		fmt.Printf("Unable to find version %s, undoing changes...", serverVersion)
+		cfg.Version = oldServerVersion
+		download.RetrieveJarIfArchived(cfg)
+		return err
+	}
+
+	return config.Save(cfg.Name, cfg)
+}
+
+func setJavaVersion(name, javaVersion string) error {
+	if _, err := java.Find(javaVersion); err != nil {
+		return err
+	}
+
+	cfg, err := config.Load(name)
+	if err != nil {
+		return err
+	}
+
+	cfg.Java = javaVersion
+
+	return config.Save(cfg.Name, cfg)
+}
+
+func setWorldName(name, worldName string) error {
+
+	serverPropertiesPath := paths.ServerProperties(name)
+
+	if fileInfo, err := os.Stat(serverPropertiesPath); err != nil || fileInfo.IsDir() {
+		return fmt.Errorf("unable to set world parameter: server.properties doesn't exist or is a directory")
+	}
+
+	return config.SetServerProperty(serverPropertiesPath, config.LevelNamePropertyKey, worldName)
 }
