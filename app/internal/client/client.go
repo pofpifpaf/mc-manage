@@ -7,6 +7,7 @@ import (
 	"io/fs"
 	"minecraft-manager/internal/config"
 	"minecraft-manager/internal/download"
+	"minecraft-manager/internal/java"
 	"minecraft-manager/internal/paths"
 	"minecraft-manager/internal/protocol"
 	"net"
@@ -285,9 +286,32 @@ func SetParameter(server string, arg1 string, arg2 string) error {
 
 	case "java":
 
-		//Check if server is running, error if true
-		//Check if java version is valid
-		return fmt.Errorf("not implemented")
+		isServerRunning, err := daemonIsServerRunning(server)
+		if err != nil {
+			return err
+		}
+		if isServerRunning {
+			return fmt.Errorf("Unable to change java version, server %s is already running", server)
+		}
+
+		if _, err := java.Find(arg2); err != nil {
+			return err
+		}
+
+		cfg, err := config.Load(server)
+		if err != nil {
+			return err
+		}
+
+		cfg.Java = arg2
+
+		if err := config.Save(cfg.Name, cfg); err != nil {
+			return err
+		}
+
+		fmt.Printf("Successfully changed server %s to java version %s", server, arg2)
+
+		return nil
 
 	default:
 		return errors.New("Incorrect set paramater")
