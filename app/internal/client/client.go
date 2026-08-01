@@ -309,7 +309,7 @@ func SetParameter(server string, arg1 string, arg2 string) error {
 			return err
 		}
 
-		fmt.Printf("Successfully changed server %s to java version %s", server, arg2)
+		fmt.Printf("Successfully changed server %s to java version %s\n", server, arg2)
 
 		return nil
 

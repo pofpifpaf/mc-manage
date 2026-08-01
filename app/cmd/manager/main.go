@@ -63,7 +63,10 @@ func run() error {
 		return client.SetParameter(os.Args[2], os.Args[3], os.Args[4])
 
 	case "import":
-		return fmt.Errorf("not yet implemented") // TODO
+		if len(os.Args) != 5 {
+			return fmt.Errorf("usage: manager import <server> <type> <version>")
+		}
+		return create.ImportServer(os.Args[2], os.Args[3], os.Args[4])
 
 	default:
 		return fmt.Errorf("unknown command %q", os.Args[1])

@@ -49,3 +49,42 @@ func Create(name, serverType, version string) error {
 
 	return nil
 }
+
+func ImportServer(name, serverType, version string) error {
+
+	serverDir := paths.Server(name)
+
+	if fileinfo, err := os.Stat(serverDir); err != nil || !fileinfo.IsDir() {
+		return fmt.Errorf("unable to import: %s doesn't exist, or is not a folder", name)
+	}
+
+	if _, err := os.Stat(paths.Config(name)); err == nil {
+		return fmt.Errorf("unable to import: %s already exists", paths.Config(name))
+	}
+
+	if err := templates.CreateConfigJsonFile(name, serverType); err != nil {
+		return err
+	}
+
+	fmt.Printf("Created config file at %s\n", paths.Config(name))
+
+	cfg, err := config.Load(name)
+	if err != nil {
+		return err
+	}
+
+	cfg.Type = serverType
+	cfg.Version = version
+
+	if err := config.Save(cfg.Name, cfg); err != nil {
+		return err
+	}
+
+	if err := download.DownloadJar(cfg); err != nil {
+		fmt.Printf("unable to download jar : %s", err)
+	}
+
+	fmt.Printf("Successfully imported server %s into manager\n\n", name)
+
+	return nil
+}
