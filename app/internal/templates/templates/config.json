@@ -6,5 +6,6 @@
     "memory": "4G",
     "jar": "server.jar",
     "port": "25565",
+    "level": "world",
     "autorestart": false
 }

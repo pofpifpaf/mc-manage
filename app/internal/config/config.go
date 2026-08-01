@@ -14,8 +14,9 @@ type Config struct {
 	Java              string `json:"java"`
 	Memory            string `json:"memory"`
 	Jar               string `json:"jar"`
-	AutomaticRestarts bool   `json:"autorestart"`
 	Port              string `json:"port"`
+	LevelName         string `json:"level"`
+	AutomaticRestarts bool   `json:"autorestart"`
 }
 
 func (c *Config) Validate() error {

@@ -313,6 +313,12 @@ func SetParameter(server string, arg1 string, arg2 string) error {
 
 		return nil
 
+	case "world":
+
+		fmt.Printf("arg2 = %s\n", arg2)
+
+		return nil
+
 	default:
 		return errors.New("Incorrect set paramater")
 	}

@@ -8,13 +8,13 @@ import (
 	"path/filepath"
 )
 
-func CopyTemplate(destination string) error {
-	return fs.WalkDir(Files, "vanilla", func(path string, d fs.DirEntry, err error) error {
+func CopyTemplate(destination, serverType string) error {
+	if err := fs.WalkDir(Files, paths.Templates(serverType), func(path string, d fs.DirEntry, err error) error {
 		if err != nil {
 			return err
 		}
 
-		rel, err := filepath.Rel("vanilla", path)
+		rel, err := filepath.Rel(paths.Templates(serverType), path)
 		if err != nil {
 			return err
 		}
@@ -35,16 +35,20 @@ func CopyTemplate(destination string) error {
 		}
 
 		return os.WriteFile(dst, data, 0644)
-	})
+	}); err != nil {
+		return fmt.Errorf("Template %s not supported", serverType)
+	}
+
+	return nil
 }
 
-func CreateConfigJsonFile(destination, serverType string) error {
+func CreateConfigJsonFile(destination string) error {
 
 	dst := paths.Config(destination)
 
 	fmt.Printf("Creating config file for destination %s\n", dst)
 
-	data, err := Files.ReadFile(filepath.Join(serverType, "config.json"))
+	data, err := Files.ReadFile(paths.Templates(paths.ConfigJson))
 	if err != nil {
 		return err
 	}
