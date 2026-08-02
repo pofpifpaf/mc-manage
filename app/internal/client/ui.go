@@ -21,8 +21,8 @@ func printRunningServers(servers []ServerInfo) {
 	w := tabwriter.NewWriter(os.Stdout, 0, 0, 2, ' ', 0)
 	defer w.Flush()
 
-	fmt.Fprintln(w, "NAME\tVERSION\tJAVA\tPORT\tAUTO RESTART\tSIZE\tUPTIME")
-	fmt.Fprintln(w, "----\t-------\t----\t----\t------------\t----\t------")
+	fmt.Fprintln(w, "NAME\tVERSION\tJAVA\tPORT\tAUTO RESTART\tBOOT\tSIZE\tUPTIME")
+	fmt.Fprintln(w, "----\t-------\t----\t----\t------------\t----\t----\t------")
 
 	for _, server := range servers {
 		dirSize, _ := paths.DirSize(paths.Server(server.Name))
@@ -36,6 +36,7 @@ func printRunningServers(servers []ServerInfo) {
 			server.JavaVersion,
 			server.Port,
 			server.AutomaticRestarts,
+			server.StartOnBoot,
 			dirSize,
 			uptime,
 		)
@@ -55,21 +56,22 @@ func printServerList(servers []ServerInfo) {
 	w := tabwriter.NewWriter(os.Stdout, 0, 0, 2, ' ', 0)
 	defer w.Flush()
 
-	fmt.Fprintln(w, "NAME\tVERSION\tJAVA\tPORT\tAUTO RESTART\tSIZE\tRUNNING")
-	fmt.Fprintln(w, "----\t-------\t----\t----\t------------\t----\t-------")
+	fmt.Fprintln(w, "NAME\tVERSION\tJAVA\tPORT\tAUTO RESTART\tSIZE\tBOOT\tRUNNING")
+	fmt.Fprintln(w, "----\t-------\t----\t----\t------------\t----\t----\t-------")
 
 	for _, server := range servers {
 		dirSize, _ := paths.DirSize(paths.Server(server.Name))
 
 		fmt.Fprintf(
 			w,
-			"%s\t%s\t%s\t%s\t%t\t%s\t%t\n",
+			"%s\t%s\t%s\t%s\t%t\t%s\t%t\t%t\n",
 			server.Name,
 			server.Version,
 			server.JavaVersion,
 			server.Port,
 			server.AutomaticRestarts,
 			dirSize,
+			server.StartOnBoot,
 			server.Running,
 		)
 	}

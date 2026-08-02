@@ -48,7 +48,7 @@ func manifest() (*versionManifest, error) {
 	return &m, nil
 }
 
-func VersionMetadataURL(version string) (string, error) {
+func versionMetadataURL(version string) (string, error) {
 	m, err := manifest()
 	if err != nil {
 		return "", err
@@ -67,7 +67,7 @@ func DownloadVanilla(version, destination string) error {
 
 	fmt.Printf("Downloading %q for version %q\n", destination, version)
 
-	metadataURL, err := VersionMetadataURL(version)
+	metadataURL, err := versionMetadataURL(version)
 	if err != nil {
 		return err
 	}

@@ -62,6 +62,12 @@ func run() error {
 		}
 		return client.SetParameter(os.Args[2], os.Args[3], os.Args[4])
 
+	case "set-property":
+		return fmt.Errorf("unknown command %q", os.Args[1]) //TODO
+
+	case "download":
+		return fmt.Errorf("unknown command %q", os.Args[1]) //TODO
+
 	case "import":
 		if len(os.Args) != 5 {
 			return fmt.Errorf("usage: manager import <server> <type> <version>")

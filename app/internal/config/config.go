@@ -17,6 +17,7 @@ type Config struct {
 	Port              string `json:"port"`
 	LevelName         string `json:"level"`
 	AutomaticRestarts bool   `json:"autorestart"`
+	StartOnBoot       bool   `json:"boot"`
 }
 
 func (c *Config) Validate() error {

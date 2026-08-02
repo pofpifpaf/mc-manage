@@ -37,6 +37,17 @@ func (d *Daemon) Run() error {
 		return fmt.Errorf("daemon already running")
 	}
 
+	fmt.Println("Starting servers that need to be started on boot")
+	servers, err := client.MakeList()
+	if err != nil {
+		fmt.Printf("Unable to check for start on boot servers, err = %s\n", err)
+	}
+	for _, server := range servers {
+		if server.StartOnBoot {
+			d.manager.Start(server.Name)
+		}
+	}
+
 	fmt.Println("Minecraft manager daemon started")
 	fmt.Println("PID:", os.Getpid())
 
@@ -52,6 +63,7 @@ func (d *Daemon) Run() error {
 	<-signals
 
 	fmt.Println("Daemon shutting down")
+	fmt.Println("----------------------------")
 
 	return nil
 }

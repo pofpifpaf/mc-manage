@@ -25,6 +25,7 @@ type ServerInfo struct {
 	Running           bool
 	Version           string
 	JavaVersion       string
+	StartOnBoot       bool
 }
 
 type ServerPSResponse struct {
@@ -152,7 +153,7 @@ func GetPS() error {
 
 func GetList() error {
 
-	allServers, err := makeList()
+	allServers, err := MakeList()
 	if err != nil {
 		return err
 	}
@@ -178,7 +179,7 @@ func daemonIsServerRunning(name string) (bool, error) {
 	}
 }
 
-func makeList() ([]ServerInfo, error) {
+func MakeList() ([]ServerInfo, error) {
 
 	var result []ServerInfo
 
@@ -201,6 +202,7 @@ func makeList() ([]ServerInfo, error) {
 						Running:           isServerRunning,
 						Version:           cfg.Version,
 						JavaVersion:       cfg.Java,
+						StartOnBoot:       cfg.StartOnBoot,
 					}
 					result = append(result, server)
 				}
@@ -243,6 +245,16 @@ func SetParameter(server, arg1, arg2 string) error {
 			return err
 		}
 
+	case "boot":
+
+		if err := setStartOnBoot(server, arg2); err != nil {
+			return err
+		}
+
+	case "motd":
+
+		return fmt.Errorf("not yet implemented") //TODO
+
 	case "version":
 
 		if err := setServerVersion(server, arg2); err != nil {
@@ -268,6 +280,25 @@ func SetParameter(server, arg1, arg2 string) error {
 	fmt.Printf("Successfully changed parameter %s for server %s to %q\n", arg1, server, arg2)
 
 	return nil
+}
+
+func setStartOnBoot(name, value string) error {
+
+	cfg, err := config.Load(name)
+	if err != nil {
+		return err
+	}
+
+	switch value {
+	case "true":
+		cfg.StartOnBoot = true
+	case "false":
+		cfg.StartOnBoot = false
+	default:
+		return fmt.Errorf("Unable to set paramter: Invalid value parameter %s", value)
+	}
+
+	return config.Save(name, cfg)
 }
 
 func setServerPort(name, port string) error {

@@ -7,5 +7,6 @@
     "jar": "server.jar",
     "port": "25565",
     "level": "world",
-    "autorestart": false
+    "autorestart": false,
+    "boot": true
 }
