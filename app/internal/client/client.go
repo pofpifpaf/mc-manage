@@ -253,7 +253,9 @@ func SetParameter(server, arg1, arg2 string) error {
 
 	case "motd":
 
-		return fmt.Errorf("not yet implemented") //TODO
+		if err := config.SetServerProperty(paths.ServerProperties(server), config.MotdKey, arg2); err != nil {
+			return err
+		}
 
 	case "version":
 
@@ -388,4 +390,23 @@ func setWorldName(name, worldName string) error {
 	}
 
 	return config.SetServerProperty(serverPropertiesPath, config.LevelNamePropertyKey, worldName)
+}
+
+func DownloadJarToServer(server, downloadURL string) error {
+
+	fmt.Print("\n")
+	defer fmt.Print("\n")
+
+	cfg, err := config.Load(server)
+	if err != nil {
+		return err
+	}
+
+	if err := download.DownloadCustomJar(cfg, downloadURL); err != nil {
+		return err
+	}
+
+	cfg.Version = "custom"
+
+	return config.Save(server, cfg)
 }

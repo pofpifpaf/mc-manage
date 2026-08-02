@@ -8,5 +8,7 @@
     "port": "25565",
     "level": "world",
     "autorestart": false,
-    "boot": true
+    "boot": true,
+    "additionaljvmargs": [],
+    "additionalservargs": []
 }

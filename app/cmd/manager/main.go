@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"minecraft-manager/internal/client"
+	"minecraft-manager/internal/config"
 	"minecraft-manager/internal/create"
 	"minecraft-manager/internal/daemon"
 	"os"
@@ -56,6 +57,10 @@ func run() error {
 		}
 		return client.StopServer(os.Args[2])
 
+	case "kill":
+
+		return fmt.Errorf("not yet implemented") // TODO
+
 	case "set":
 		if len(os.Args) != 5 {
 			return fmt.Errorf("usage: manager set <server> <parameter> <argument>")
@@ -63,16 +68,65 @@ func run() error {
 		return client.SetParameter(os.Args[2], os.Args[3], os.Args[4])
 
 	case "set-property":
-		return fmt.Errorf("unknown command %q", os.Args[1]) //TODO
+		if len(os.Args) != 5 {
+			return fmt.Errorf("usage: manager set-property <server> <key> <value>")
+		}
+		return config.SetServerProperty(os.Args[2], os.Args[3], os.Args[4])
 
 	case "download":
-		return fmt.Errorf("unknown command %q", os.Args[1]) //TODO
+		if len(os.Args) != 4 {
+			return fmt.Errorf("usage: manager download <server> <URL>")
+		}
+		return client.DownloadJarToServer(os.Args[2], os.Args[3])
 
 	case "import":
 		if len(os.Args) != 5 {
 			return fmt.Errorf("usage: manager import <server> <type> <version>")
 		}
 		return create.ImportServer(os.Args[2], os.Args[3], os.Args[4])
+
+	case "add-launch-arg", "ala":
+
+		if len(os.Args) != 5 {
+			return fmt.Errorf("usage: manager %s <jvm/serv> <server> <arg>", os.Args[1])
+		}
+		switch os.Args[2] {
+		case "jvm":
+			return config.AddAdditionalJVMArg(os.Args[3], os.Args[4])
+		case "serv":
+			return config.AddAdditionalServArg(os.Args[3], os.Args[4])
+		default:
+			return fmt.Errorf("usage: manager %s <jvm/serv> <server> <arg>", os.Args[1])
+		}
+
+	case "rem-launch-arg", "rla":
+		if len(os.Args) != 5 {
+			return fmt.Errorf("usage: manager %s <jvm/serv> <server> <index>", os.Args[1])
+		}
+		switch os.Args[2] {
+		case "jvm":
+			return config.RemoveAdditionalJVMArg(os.Args[3], os.Args[4])
+		case "serv":
+			return config.RemoveAdditionalServArg(os.Args[3], os.Args[4])
+		default:
+			return fmt.Errorf("usage: manager %s <jvm/serv> <server> <arg>", os.Args[1])
+		}
+
+	case "help", "--help", "-?", "?":
+
+		return fmt.Errorf("not yet implemented") // TODO
+
+	case "inspect":
+
+		return fmt.Errorf("not yet implemented") // TODO
+
+	case "motd":
+
+		return fmt.Errorf("not yet implemented") // TODO: motd generator
+
+	case "backup":
+
+		return fmt.Errorf("not yet implemented") // TODO
 
 	default:
 		return fmt.Errorf("unknown command %q", os.Args[1])

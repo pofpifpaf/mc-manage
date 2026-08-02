@@ -2,8 +2,10 @@ package download
 
 import (
 	"fmt"
+	"io"
 	"minecraft-manager/internal/config"
 	"minecraft-manager/internal/paths"
+	"net/http"
 	"os"
 	"path/filepath"
 )
@@ -41,6 +43,33 @@ func DownloadJar(cfg *config.Config) error {
 	}
 
 	return err
+}
+
+func DownloadCustomJar(cfg *config.Config, downloadURL string) error {
+
+	resp, err := http.Get(downloadURL)
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+
+	fmt.Printf("Downloading from url %q\n", downloadURL)
+
+	if resp.StatusCode != http.StatusOK {
+		return fmt.Errorf("unexpected status %s", resp.Status)
+	}
+
+	destination := paths.Jar(cfg.Name, cfg.Jar)
+
+	out, err := os.Create(destination)
+	if err != nil {
+		return err
+	}
+	defer out.Close()
+
+	_, err = io.Copy(out, resp.Body)
+
+	return nil
 }
 
 func ArchiveJarFile(cfg *config.Config) error {

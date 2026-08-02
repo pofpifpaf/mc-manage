@@ -28,14 +28,22 @@ func Build(server string) (*exec.Cmd, bool, string, error) {
 		return nil, false, "", fmt.Errorf("jar not found: %s", jarPath)
 	}
 
-	cmd := exec.Command(
-		javaPath,
-		"-Xms"+cfg.Memory,
-		"-Xmx"+cfg.Memory,
+	args := []string{
+		"-Xms" + cfg.Memory,
+		"-Xmx" + cfg.Memory,
+	}
+
+	args = append(args, cfg.AdditionalJVMArgs...)
+
+	args = append(args,
 		"-jar",
 		cfg.Jar,
 		"nogui",
 	)
+
+	args = append(args, cfg.AdditionalServArgs...)
+
+	cmd := exec.Command(javaPath, args...)
 
 	cmd.Dir = serverDir
 

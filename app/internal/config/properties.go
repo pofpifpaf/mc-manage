@@ -10,6 +10,7 @@ import (
 const (
 	LevelNamePropertyKey = "level-name"
 	PortPropertyKey      = "server-port"
+	MotdKey              = "motd"
 )
 
 func SetServerProperty(filename, key, value string) error {
