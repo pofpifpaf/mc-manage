@@ -54,8 +54,8 @@ func PrintRunningServers(servers []protocol.ServerInfo) {
 	w := tabwriter.NewWriter(os.Stdout, 0, 0, 2, ' ', 0)
 	defer w.Flush()
 
-	fmt.Fprintln(w, "NAME\tVERSION\tJAVA\tPORT\tAUTO RESTART\tBOOT\tSIZE\tUPTIME\tPLAYERS")
-	fmt.Fprintln(w, "----\t-------\t----\t----\t------------\t----\t----\t------\t-------")
+	fmt.Fprintln(w, "NAME\tVERSION\tJAVA\tPORT\tAUTO RESTART\tBOOT\tSIZE\tUPTIME\tPLAYERS\tSTATE")
+	fmt.Fprintln(w, "----\t-------\t----\t----\t------------\t----\t----\t------\t-------\t-----")
 
 	for _, server := range servers {
 
@@ -69,7 +69,7 @@ func PrintRunningServers(servers []protocol.ServerInfo) {
 
 		fmt.Fprintf(
 			w,
-			"%s\t%s\t%s\t%s\t%t\t%t\t%s\t%s\t%s\n",
+			"%s\t%s\t%s\t%s\t%t\t%t\t%s\t%s\t%s\t%s\n",
 			server.Name,
 			server.Version,
 			server.JavaVersion,
@@ -79,6 +79,7 @@ func PrintRunningServers(servers []protocol.ServerInfo) {
 			dirSize,
 			uptime,
 			playerString,
+			server.Running,
 		)
 	}
 }
@@ -125,9 +126,12 @@ func PrintInspectServer(server protocol.ServerInfo, cfg *protocol.Config) {
 
 	fmt.Printf("Info for server: %s\n\n", cfg.Name)
 
-	if server.Running {
+	switch server.Running {
+	case protocol.StateRunning:
 		fmt.Println("status: " + cGreen + "running" + ansiReset)
-	} else {
+	case protocol.StateStarting:
+		fmt.Println("status: " + cYellow + "starting" + ansiReset)
+	case protocol.StateStopped:
 		fmt.Println("status: " + cRed + "not running" + ansiReset)
 	}
 
@@ -149,7 +153,7 @@ func PrintInspectServer(server protocol.ServerInfo, cfg *protocol.Config) {
 	dirSize, _ := paths.DirSize(paths.Server(server.Name))
 	fmt.Fprintf(w, "Size\t%s\n", dirSize)
 
-	if server.Running {
+	if server.Running != protocol.StateStopped {
 		uptime := time.Since(server.StartedAt).Round(time.Second)
 		fmt.Fprintf(w, "Uptime\t%s\n", uptime)
 		if server.PlayersOnlineMax == -1 {

@@ -86,7 +86,7 @@ func MakeServerInfo(server *Server) (protocol.ServerInfo, error) {
 		Port:              server.Port,
 		AutomaticRestarts: server.AutomaticRestarts,
 		StartedAt:         server.StartedAt,
-		Running:           true,
+		Running:           protocol.StateRunning,
 		Version:           cfg.Version,
 		JavaVersion:       cfg.Java,
 	}

@@ -62,19 +62,19 @@ func GetList() error {
 	return nil
 }
 
-func daemonIsServerRunning(name string) (bool, error) {
+func daemonIsServerRunning(name string) (protocol.ServerState, error) {
 	resp, err := sendProtocol(protocol.Request{
 		Command: "CHECK",
 		Server:  name,
 	})
 	if err != nil {
-		return false, err
+		return protocol.StateStopped, err
 	}
 
 	if resp.OK && resp.Message == name {
-		return resp.Data.(bool), nil
+		return resp.Data.(protocol.ServerState), nil
 	} else {
-		return false, fmt.Errorf("Incorrect response from daemon")
+		return protocol.StateStopped, fmt.Errorf("Incorrect response from daemon")
 	}
 }
 
@@ -127,7 +127,7 @@ func SetParameter(server, arg1, arg2 string) error {
 	if err != nil {
 		return err
 	}
-	if isServerRunning && arg1 != "autorestart" {
+	if isServerRunning != protocol.StateStopped && arg1 != "autorestart" {
 		return fmt.Errorf("Unable to use set, server %s is already running", server)
 	}
 
@@ -352,7 +352,7 @@ func InspectServer(name string) error {
 	serverInfo := protocol.ServerInfo{}
 
 	if !resp.OK {
-		serverInfo.Running = false
+		serverInfo.Running = protocol.StateStopped
 	} else {
 		serverInfo, err = makeServerInfoInterface(resp.Data)
 	}
@@ -383,6 +383,7 @@ func getActivePlayerInformation(server protocol.ServerInfo) (protocol.ServerInfo
 
 	status, err := protocol.GetServerStatus(server.Port)
 	if err != nil {
+		server.Running = protocol.StateStarting
 		return server, err
 	}
 

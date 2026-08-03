@@ -39,12 +39,20 @@ type Config struct {
 	AdditionalServArgs []string `json:"additionalservargs"`
 }
 
+type ServerState string
+
+const (
+	StateStopped  ServerState = "stopped"
+	StateStarting ServerState = "starting"
+	StateRunning  ServerState = "running"
+)
+
 type ServerInfo struct {
 	Name              string
 	Port              string
 	AutomaticRestarts bool
 	StartedAt         time.Time
-	Running           bool
+	Running           ServerState
 	Version           string
 	JavaVersion       string
 	StartOnBoot       bool
