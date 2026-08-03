@@ -64,21 +64,32 @@ func (m *Manager) ListRunning() []client.ServerInfo {
 
 	for _, server := range m.servers {
 
-		cfg, _ := config.Load(server.Name)
+		serv, _ := MakeServerInfo(server)
 
-		serv := client.ServerInfo{
-			Name:              server.Name,
-			Version:           cfg.Version,
-			JavaVersion:       cfg.Java,
-			Port:              server.Port,
-			AutomaticRestarts: server.AutomaticRestarts,
-			StartedAt:         server.StartedAt,
-			Running:           true,
-		}
 		result = append(result, serv)
 	}
 
 	return result
+}
+
+func MakeServerInfo(server *Server) (client.ServerInfo, error) {
+
+	cfg, err := config.Load(server.Name)
+	if err != nil {
+		return client.ServerInfo{}, err
+	}
+
+	serv := client.ServerInfo{
+		Name:              server.Name,
+		Port:              server.Port,
+		AutomaticRestarts: server.AutomaticRestarts,
+		StartedAt:         server.StartedAt,
+		Running:           true,
+		Version:           cfg.Version,
+		JavaVersion:       cfg.Java,
+	}
+
+	return serv, nil
 }
 
 func (m *Manager) Stop(name string) error {

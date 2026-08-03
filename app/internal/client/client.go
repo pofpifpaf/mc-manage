@@ -34,7 +34,7 @@ type ServerPSResponse struct {
 	Data    []ServerInfo `json:"data"`
 }
 
-func makeServerInfoInterface(data []interface{}) ([]ServerInfo, error) {
+func makeServerInfoListInterface(data []interface{}) ([]ServerInfo, error) {
 
 	servers := make([]ServerInfo, len(data))
 
@@ -55,6 +55,19 @@ func makeServerInfoInterface(data []interface{}) ([]ServerInfo, error) {
 	}
 
 	return servers, nil
+}
+
+func makeServerInfoInterface(data interface{}) (ServerInfo, error) {
+
+	b, err := json.Marshal(data)
+	if err != nil {
+		return ServerInfo{}, err
+	}
+
+	var info ServerInfo
+	err = json.Unmarshal(b, &info)
+
+	return info, err
 }
 
 func sendProtocol(req protocol.Request) (protocol.Response, error) {
@@ -93,7 +106,7 @@ func send(req protocol.Request) error {
 
 	case "PS":
 
-		servers, _ := makeServerInfoInterface(resp.Data.([]interface{}))
+		servers, _ := makeServerInfoListInterface(resp.Data.([]interface{}))
 
 		printRunningServers(servers)
 
@@ -166,7 +179,7 @@ func GetList() error {
 func daemonIsServerRunning(name string) (bool, error) {
 	resp, err := sendProtocol(protocol.Request{
 		Command: "CHECK",
-		Text:    name,
+		Server:  name,
 	})
 	if err != nil {
 		return false, err
@@ -409,4 +422,32 @@ func DownloadJarToServer(server, downloadURL string) error {
 	cfg.Version = "custom"
 
 	return config.Save(server, cfg)
+}
+
+func InspectServer(name string) error {
+
+	resp, err := sendProtocol(protocol.Request{
+		Command: "INSPECT",
+		Server:  name,
+	})
+	if err != nil {
+		return err
+	}
+
+	serverInfo := ServerInfo{}
+
+	if !resp.OK {
+		serverInfo.Running = false
+	} else {
+		serverInfo, err = makeServerInfoInterface(resp.Data)
+	}
+
+	cfg, err := config.Load(name)
+	if err != nil {
+		return err
+	}
+
+	printInspectServer(serverInfo, cfg)
+
+	return nil
 }

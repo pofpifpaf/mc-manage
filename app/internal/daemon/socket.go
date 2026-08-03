@@ -130,13 +130,45 @@ func (d *Daemon) handleConnection(conn net.Conn) {
 
 	case "CHECK":
 
-		_, isServerRunning := d.manager.Get(req.Text)
+		_, isServerRunning := d.manager.Get(req.Server)
 
 		json.NewEncoder(conn).Encode(
 			protocol.Response{
 				OK:      true,
-				Message: req.Text,
+				Message: req.Server,
 				Data:    isServerRunning,
+			},
+		)
+
+	case "INSPECT":
+
+		server, exist := d.manager.Get(req.Server)
+
+		if !exist {
+			json.NewEncoder(conn).Encode(
+				protocol.Response{
+					OK:      false,
+					Message: "Server not found, or is not running",
+				},
+			)
+			return
+		}
+
+		serverInfo, err := MakeServerInfo(server)
+		if err != nil {
+			json.NewEncoder(conn).Encode(
+				protocol.Response{
+					OK:      false,
+					Message: "error: " + err.Error(),
+				},
+			)
+			return
+		}
+
+		json.NewEncoder(conn).Encode(
+			protocol.Response{
+				OK:   true,
+				Data: serverInfo,
 			},
 		)
 

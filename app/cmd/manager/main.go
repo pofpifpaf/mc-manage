@@ -118,7 +118,11 @@ func run() error {
 
 	case "inspect":
 
-		return fmt.Errorf("not yet implemented") // TODO
+		if len(os.Args) != 3 {
+			return fmt.Errorf("usage: manager inspect <server>")
+		}
+
+		return client.InspectServer(os.Args[2])
 
 	case "motd":
 
