@@ -54,16 +54,22 @@ func PrintRunningServers(servers []protocol.ServerInfo) {
 	w := tabwriter.NewWriter(os.Stdout, 0, 0, 2, ' ', 0)
 	defer w.Flush()
 
-	fmt.Fprintln(w, "NAME\tVERSION\tJAVA\tPORT\tAUTO RESTART\tBOOT\tSIZE\tUPTIME")
-	fmt.Fprintln(w, "----\t-------\t----\t----\t------------\t----\t----\t------")
+	fmt.Fprintln(w, "NAME\tVERSION\tJAVA\tPORT\tAUTO RESTART\tBOOT\tSIZE\tUPTIME\tPLAYERS")
+	fmt.Fprintln(w, "----\t-------\t----\t----\t------------\t----\t----\t------\t-------")
 
 	for _, server := range servers {
+
 		dirSize, _ := paths.DirSize(paths.Server(server.Name))
 		uptime := time.Since(server.StartedAt).Round(time.Second)
 
+		playerString := "-/-"
+		if server.PlayersOnlineMax != -1 {
+			playerString = fmt.Sprintf("%d/%d", server.PlayersOnline, server.PlayersOnlineMax)
+		}
+
 		fmt.Fprintf(
 			w,
-			"%s\t%s\t%s\t%s\t%t\t%t\t%s\t%s\n",
+			"%s\t%s\t%s\t%s\t%t\t%t\t%s\t%s\t%s\n",
 			server.Name,
 			server.Version,
 			server.JavaVersion,
@@ -72,6 +78,7 @@ func PrintRunningServers(servers []protocol.ServerInfo) {
 			server.StartOnBoot,
 			dirSize,
 			uptime,
+			playerString,
 		)
 	}
 }
@@ -93,6 +100,7 @@ func PrintServerList(servers []protocol.ServerInfo) {
 	fmt.Fprintln(w, "----\t-------\t----\t----\t------------\t----\t----\t-------")
 
 	for _, server := range servers {
+
 		dirSize, _ := paths.DirSize(paths.Server(server.Name))
 
 		fmt.Fprintf(
@@ -144,8 +152,14 @@ func PrintInspectServer(server protocol.ServerInfo, cfg *protocol.Config) {
 	if server.Running {
 		uptime := time.Since(server.StartedAt).Round(time.Second)
 		fmt.Fprintf(w, "Uptime\t%s\n", uptime)
+		if server.PlayersOnlineMax == -1 {
+			fmt.Fprintln(w, "Players\t-/-")
+		} else {
+			fmt.Fprintf(w, "Players\t%d/%d\n", server.PlayersOnline, server.PlayersOnlineMax)
+		}
 	} else {
 		fmt.Fprintln(w, "Uptime\t-")
+		fmt.Fprintln(w, "Players\t-/-")
 	}
 
 	fmt.Fprintln(w, "")

@@ -45,7 +45,10 @@ func send(req protocol.Request) error {
 
 	case "PS":
 
-		servers, _ := makeServerInfoListInterface(resp.Data.([]interface{}))
+		servers, err := makeServerInfoListInterface(resp.Data.([]interface{}))
+		if err != nil {
+			return err
+		}
 
 		ui.PrintRunningServers(servers)
 
@@ -86,6 +89,13 @@ func makeServerInfoListInterface(data []interface{}) ([]protocol.ServerInfo, err
 			return nil, err
 		}
 
+		if server.Running {
+			server, err = getActivePlayerInformation(server)
+			if err != nil {
+				server.PlayersOnlineMax = -1
+			}
+		}
+
 		servers[i] = server
 	}
 
@@ -101,6 +111,16 @@ func makeServerInfoInterface(data interface{}) (protocol.ServerInfo, error) {
 
 	var info protocol.ServerInfo
 	err = json.Unmarshal(b, &info)
+	if err != nil {
+		return protocol.ServerInfo{}, err
+	}
 
-	return info, err
+	if info.Running {
+		info, err = getActivePlayerInformation(info)
+		if err != nil {
+			info.PlayersOnlineMax = -1
+		}
+	}
+
+	return info, nil
 }

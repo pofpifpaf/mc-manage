@@ -128,7 +128,7 @@ func SetParameter(server, arg1, arg2 string) error {
 		return err
 	}
 	if isServerRunning && arg1 != "autorestart" {
-		return fmt.Errorf("Unable to use set server %s is already running", server)
+		return fmt.Errorf("Unable to use set, server %s is already running", server)
 	}
 
 	switch arg1 {
@@ -377,4 +377,17 @@ func KillServer(name string) error {
 	}
 
 	return nil
+}
+
+func getActivePlayerInformation(server protocol.ServerInfo) (protocol.ServerInfo, error) {
+
+	status, err := protocol.GetServerStatus(server.Port)
+	if err != nil {
+		return server, err
+	}
+
+	server.PlayersOnline = status.Players.Online
+	server.PlayersOnlineMax = status.Players.Max
+
+	return server, nil
 }

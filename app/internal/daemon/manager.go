@@ -41,7 +41,7 @@ type ScreenClient struct {
 func NewManager() *Manager {
 	return &Manager{
 		servers:            make(map[string]*Server),
-		gracePeriodSeconds: 9,
+		gracePeriodSeconds: time.Duration(9 * time.Second),
 	}
 }
 
@@ -174,6 +174,10 @@ func (m *Manager) Kill(server string) error {
 
 func (m *Manager) Start(name string) error {
 
+	if m.servers[name] != nil {
+		return fmt.Errorf("server %s is already running")
+	}
+
 	cmd, autorestarts, port, err := launcher.Build(name)
 	if err != nil {
 		return err
@@ -184,7 +188,7 @@ func (m *Manager) Start(name string) error {
 		portAlreadyUsed = portAlreadyUsed || (port == server.Port)
 	}
 	if portAlreadyUsed {
-		return fmt.Errorf("Port %s already used", port)
+		return fmt.Errorf("Port %s already used", port) // See if downgrade to warning
 	}
 
 	ptmx, err := pty.Start(cmd)

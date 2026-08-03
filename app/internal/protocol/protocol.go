@@ -48,6 +48,8 @@ type ServerInfo struct {
 	Version           string
 	JavaVersion       string
 	StartOnBoot       bool
+	PlayersOnline     int
+	PlayersOnlineMax  int
 }
 
 type ServerPSResponse struct {
