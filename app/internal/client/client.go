@@ -72,7 +72,7 @@ func daemonIsServerRunning(name string) (protocol.ServerState, error) {
 	}
 
 	if resp.OK && resp.Message == name {
-		return resp.Data.(protocol.ServerState), nil
+		return protocol.ServerState(resp.Data.(string)), nil
 	} else {
 		return protocol.StateStopped, fmt.Errorf("Incorrect response from daemon")
 	}

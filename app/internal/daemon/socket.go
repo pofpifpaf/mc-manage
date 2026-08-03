@@ -133,11 +133,16 @@ func (d *Daemon) handleConnection(conn net.Conn) {
 
 		_, isServerRunning := d.manager.Get(req.Server)
 
+		serverState := protocol.StateStopped
+		if isServerRunning {
+			serverState = protocol.StateRunning
+		}
+
 		json.NewEncoder(conn).Encode(
 			protocol.Response{
 				OK:      true,
 				Message: req.Server,
-				Data:    isServerRunning,
+				Data:    serverState,
 			},
 		)
 

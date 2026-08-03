@@ -106,7 +106,7 @@ func PrintServerList(servers []protocol.ServerInfo) {
 
 		fmt.Fprintf(
 			w,
-			"%s\t%s\t%s\t%s\t%t\t%s\t%t\t%t\n",
+			"%s\t%s\t%s\t%s\t%t\t%s\t%t\t%s\n",
 			server.Name,
 			server.Version,
 			server.JavaVersion,
