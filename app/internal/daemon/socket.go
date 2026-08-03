@@ -235,6 +235,37 @@ func (d *Daemon) handleConnection(conn net.Conn) {
 			},
 		)
 
+	case "KILL":
+
+		if req.Server == "" {
+			json.NewEncoder(conn).Encode(
+				protocol.Response{
+					OK:      false,
+					Message: "usage KILL <server>",
+				},
+			)
+			return
+		}
+
+		err := d.manager.Kill(req.Server)
+
+		if err != nil {
+			json.NewEncoder(conn).Encode(
+				protocol.Response{
+					OK:      false,
+					Message: err.Error(),
+				},
+			)
+			return
+		}
+
+		json.NewEncoder(conn).Encode(
+			protocol.Response{
+				OK:      true,
+				Message: fmt.Sprintf("Kill server command sent to server %s", req.Server),
+			},
+		)
+
 	case "SET":
 
 		err := d.manager.SetParameter(req.Server, req.Text, req.Data)

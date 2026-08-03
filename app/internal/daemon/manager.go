@@ -108,6 +108,28 @@ func (m *Manager) Stop(name string) error {
 	return nil
 }
 
+func (m *Manager) Kill(server string) error {
+	serv, exist := m.Get(server)
+	if !exist {
+		return fmt.Errorf("server is not running")
+	}
+
+	pid := serv.Cmd.Process.Pid
+
+	process, err := os.FindProcess(pid)
+	if err != nil {
+		return fmt.Errorf("Error finding process: %s", err)
+
+	}
+
+	err = process.Kill()
+	if err != nil {
+		return fmt.Errorf("Error killing process: %s", err)
+	}
+
+	return nil
+}
+
 func (m *Manager) Start(name string) error {
 	cmd, autorestarts, port, err := launcher.Build(name)
 	if err != nil {
@@ -158,7 +180,7 @@ func (m *Manager) Start(name string) error {
 		return err
 	}
 
-	ui.PrintSuccess(fmt.Sprintf("%s started (PID %d)\n", name, cmd.Process.Pid))
+	ui.PrintSuccess(fmt.Sprintf("%s started (PID %d)", name, cmd.Process.Pid))
 
 	go func() {
 
@@ -305,7 +327,7 @@ func (s *Server) readInput(c *ScreenClient) {
 	for {
 		n, err := c.Conn.Read(buf)
 		if n > 0 {
-			ui.PrintInfo(fmt.Sprintf("received: %q\n", buf[:n]))
+			ui.PrintInfo(fmt.Sprintf("received: %q", buf[:n]))
 			s.PTY.Write(buf[:n])
 		}
 		if err != nil {

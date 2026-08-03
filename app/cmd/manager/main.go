@@ -59,8 +59,10 @@ func run() error {
 		return client.StopServer(os.Args[2])
 
 	case "kill":
-
-		return fmt.Errorf("not yet implemented") // TODO
+		if len(os.Args) != 3 {
+			return fmt.Errorf("usage: manager kill <server>")
+		}
+		return client.KillServer(os.Args[2])
 
 	case "set":
 		if len(os.Args) != 5 {

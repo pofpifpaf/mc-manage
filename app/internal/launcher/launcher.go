@@ -48,7 +48,7 @@ func Build(server string) (*exec.Cmd, bool, string, error) {
 
 	cmd.Dir = serverDir
 
-	ui.PrintInfo(fmt.Sprintf("Starting %s, with Java Path: %s and Server Directory : %s \n", cfg.Name, javaPath, serverDir))
+	ui.PrintInfo(fmt.Sprintf("Starting %s, with Java Path: %s and Server Directory : %s ", cfg.Name, javaPath, serverDir))
 
 	return cmd, cfg.AutomaticRestarts, cfg.Port, nil
 }

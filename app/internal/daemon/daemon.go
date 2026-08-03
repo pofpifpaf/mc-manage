@@ -63,8 +63,8 @@ func (d *Daemon) Run() error {
 
 	<-signals
 
-	fmt.Println("Daemon shutting down")
-	fmt.Println("----------------------------")
+	ui.PrintInfo("Daemon shutting down")
+	fmt.Println("----------------------------------------------------------------")
 
 	return nil
 }
