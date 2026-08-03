@@ -13,6 +13,7 @@ import (
 	"os"
 	"path/filepath"
 	"strconv"
+	"time"
 )
 
 func StartServer(server string) error {
@@ -174,7 +175,7 @@ func SetParameter(server, arg1, arg2 string) error {
 		}
 
 	default:
-		return fmt.Errorf("Incorrect set paramater %s", arg1)
+		return fmt.Errorf("Incorrect set parameter %s", arg1)
 	}
 
 	ui.PrintSuccess("Successfully changed parameter " + arg1 + " for server " + server + " to \"" + arg2 + "\"")
@@ -289,6 +290,34 @@ func setWorldName(name, worldName string) error {
 	}
 
 	return config.SetServerProperty(serverPropertiesPath, config.LevelNamePropertyKey, worldName)
+}
+
+func SetGracePeriod(period string) error {
+	periodInt, err := strconv.Atoi(period)
+	if err != nil || (periodInt < 0 || periodInt > 360) {
+		return fmt.Errorf("grace period out of range, must be between 0 and 360")
+	}
+
+	var periodDuration time.Duration
+	periodDuration = time.Duration(periodInt) * time.Second
+
+	resp, err := sendProtocol(protocol.Request{
+		Command: "SET",
+		Server:  "name",
+		Text:    "graceperiod",
+		Data:    periodDuration,
+	})
+	if err != nil {
+		return err
+	}
+
+	if !resp.OK {
+		return fmt.Errorf("NOK from daemon: %s", resp.Message)
+	}
+
+	ui.PrintSuccess(fmt.Sprintf("Grace period now set to %s", periodDuration))
+
+	return nil
 }
 
 func DownloadJarToServer(server, downloadURL string) error {

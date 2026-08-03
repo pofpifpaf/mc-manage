@@ -127,6 +127,14 @@ func run() error {
 
 		return client.InspectServer(os.Args[2])
 
+	case "grace-period":
+
+		if len(os.Args) != 3 {
+			return fmt.Errorf("usage: manager grace-period <grace-period-in-seconds>")
+		}
+
+		return client.SetGracePeriod(os.Args[2])
+
 	case "motd":
 
 		return fmt.Errorf("not yet implemented") // TODO: motd generator

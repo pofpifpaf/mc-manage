@@ -21,7 +21,7 @@ func (d *Daemon) Listen() error {
 
 	defer listener.Close()
 
-	ui.PrintInfo("Listening on" + paths.SocketPath)
+	ui.PrintSuccess("CLIENT - Listening on" + paths.SocketPath)
 
 	for {
 		conn, err := listener.Accept()
@@ -45,7 +45,7 @@ func (d *Daemon) listenScreen() error {
 
 	defer listener.Close()
 
-	ui.PrintInfo("Screen - Listening on" + paths.ScreenSocketPath)
+	ui.PrintSuccess("SCREEN - Listening on" + paths.ScreenSocketPath)
 
 	for {
 		conn, err := listener.Accept()

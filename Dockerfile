@@ -18,7 +18,8 @@ RUN apt-get update && \
     wget \
     bash \
     tar \
-    && rm -rf /var/lib/apt/lists/*
+    && rm -rf /var/lib/apt/lists/* \
+    && mkdir /servers
 
 
 # Install Java JRE versions

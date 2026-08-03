@@ -1,7 +1,6 @@
 package daemon
 
 import (
-	"errors"
 	"fmt"
 	"minecraft-manager/internal/config"
 	"minecraft-manager/internal/launcher"
@@ -30,8 +29,9 @@ type Server struct {
 }
 
 type Manager struct {
-	servers map[string]*Server
-	mutex   sync.Mutex
+	servers            map[string]*Server
+	gracePeriodSeconds time.Duration
+	mutex              sync.Mutex
 }
 
 type ScreenClient struct {
@@ -40,7 +40,8 @@ type ScreenClient struct {
 
 func NewManager() *Manager {
 	return &Manager{
-		servers: make(map[string]*Server),
+		servers:            make(map[string]*Server),
+		gracePeriodSeconds: 9,
 	}
 }
 
@@ -93,22 +94,62 @@ func MakeServerInfo(server *Server) (protocol.ServerInfo, error) {
 	return serv, nil
 }
 
+func (m *Manager) ServerCount() int {
+	m.mutex.Lock()
+	defer m.mutex.Unlock()
+
+	return len(m.servers)
+}
+
+func (m *Manager) StopAllServers() {
+	m.mutex.Lock()
+	servers := m.servers
+	m.mutex.Unlock()
+
+	for _, server := range servers {
+		err := m.Stop(server.Name)
+		if err != nil {
+			ui.PrintError("could not send stop command to server " + server.Name + " | error : " + err.Error())
+		}
+	}
+}
+
+func (m *Manager) KillAllServers() {
+	m.mutex.Lock()
+	servers := m.servers
+	m.mutex.Unlock()
+
+	for _, server := range servers {
+		err := m.Kill(server.Name)
+		if err != nil {
+			ui.PrintError("could not send kill command to server " + server.Name + " | error : " + err.Error())
+		}
+	}
+}
+
 func (m *Manager) Stop(name string) error {
+	m.mutex.Lock()
+	defer m.mutex.Unlock()
+
 	server, serverExists := m.Get(name)
 
 	if !serverExists {
-		return errors.New("server is not running")
+		return fmt.Errorf("Server %s is not running", name)
 	}
 
 	ui.PrintInfo("Stopping server " + name)
 
 	server.AutomaticRestarts = false
-	server.PTY.Write([]byte("\nstop\n"))
+	_, err := server.PTY.Write([]byte("\nstop\n"))
 
-	return nil
+	return err
 }
 
 func (m *Manager) Kill(server string) error {
+
+	m.mutex.Lock()
+	defer m.mutex.Unlock()
+
 	serv, exist := m.Get(server)
 	if !exist {
 		return fmt.Errorf("server is not running")
@@ -122,6 +163,7 @@ func (m *Manager) Kill(server string) error {
 
 	}
 
+	serv.AutomaticRestarts = false
 	err = process.Kill()
 	if err != nil {
 		return fmt.Errorf("Error killing process: %s", err)
@@ -131,6 +173,7 @@ func (m *Manager) Kill(server string) error {
 }
 
 func (m *Manager) Start(name string) error {
+
 	cmd, autorestarts, port, err := launcher.Build(name)
 	if err != nil {
 		return err
@@ -187,7 +230,7 @@ func (m *Manager) Start(name string) error {
 		err := cmd.Wait()
 
 		if err != nil {
-			ui.PrintError(fmt.Sprintf("%s exited: %v\n", name, err))
+			ui.PrintError(fmt.Sprintf("%s exited: %v", name, err))
 			send := fmt.Sprintf("\n----------- Server exited with error code %v, screen session can now be detached...\n", err)
 			server.Broadcast([]byte(send))
 		} else {
@@ -217,14 +260,15 @@ func (m *Manager) Remove(name string) {
 }
 
 func (m *Manager) Get(name string) (*Server, bool) {
-	m.mutex.Lock()
-	defer m.mutex.Unlock()
 
 	server, ok := m.servers[name]
 	return server, ok
 }
 
 func (m *Manager) SetParameter(server string, paramType string, data any) error {
+
+	m.mutex.Lock()
+	defer m.mutex.Unlock()
 
 	switch paramType {
 	case "autorestart":
@@ -253,6 +297,12 @@ func (m *Manager) SetParameter(server string, paramType string, data any) error 
 		if err != nil {
 			return err
 		}
+
+	case "graceperiod":
+
+		m.gracePeriodSeconds = time.Duration(data.(float64))
+
+		ui.PrintInfo(fmt.Sprintf("Grace Period is now set to %s", m.gracePeriodSeconds))
 
 	default:
 		return fmt.Errorf("Unknown parameter for SET %s", paramType)
