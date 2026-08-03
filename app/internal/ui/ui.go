@@ -1,9 +1,9 @@
-package client
+package ui
 
 import (
 	"fmt"
-	"minecraft-manager/internal/config"
 	"minecraft-manager/internal/paths"
+	"minecraft-manager/internal/protocol"
 	"os"
 	"text/tabwriter"
 	"time"
@@ -25,7 +25,23 @@ const (
 	cWhite  = "\033[37m"
 )
 
-func printRunningServers(servers []ServerInfo) {
+func PrintError(errorStr string) {
+	fmt.Printf(cRed+"[ERROR] "+ansiReset+"%s\n", errorStr)
+}
+
+func PrintWarning(warnStr string) {
+	fmt.Printf(cYellow+"[WARN] "+ansiReset+"%s\n", warnStr)
+}
+
+func PrintInfo(infoStr string) {
+	fmt.Printf(cBlue+"[INFO] "+ansiReset+"%s\n", infoStr)
+}
+
+func PrintSuccess(succStr string) {
+	fmt.Printf(cGreen+"[SUCCESS] "+ansiReset+"%s\n", succStr)
+}
+
+func PrintRunningServers(servers []protocol.ServerInfo) {
 
 	fmt.Printf("\n")
 	defer fmt.Print("\n")
@@ -60,7 +76,7 @@ func printRunningServers(servers []ServerInfo) {
 	}
 }
 
-func printServerList(servers []ServerInfo) {
+func PrintServerList(servers []protocol.ServerInfo) {
 
 	fmt.Printf("\n")
 	defer fmt.Print("\n")
@@ -94,7 +110,7 @@ func printServerList(servers []ServerInfo) {
 	}
 }
 
-func printInspectServer(server ServerInfo, cfg *config.Config) {
+func PrintInspectServer(server protocol.ServerInfo, cfg *protocol.Config) {
 
 	fmt.Print(("\n"))
 	defer fmt.Print("\n")
@@ -104,7 +120,7 @@ func printInspectServer(server ServerInfo, cfg *config.Config) {
 	if server.Running {
 		fmt.Println("status: " + cGreen + "running" + ansiReset)
 	} else {
-		fmt.Println("status: " + cRed + "stopped" + ansiReset)
+		fmt.Println("status: " + cRed + "not running" + ansiReset)
 	}
 
 	fmt.Print("\n")

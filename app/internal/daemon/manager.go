@@ -3,10 +3,11 @@ package daemon
 import (
 	"errors"
 	"fmt"
-	"minecraft-manager/internal/client"
 	"minecraft-manager/internal/config"
 	"minecraft-manager/internal/launcher"
+	"minecraft-manager/internal/protocol"
 	"minecraft-manager/internal/ringbuffer"
+	"minecraft-manager/internal/ui"
 	"net"
 	"os"
 	"os/exec"
@@ -56,11 +57,11 @@ func (m *Manager) Add(server *Server) error {
 	return nil
 }
 
-func (m *Manager) ListRunning() []client.ServerInfo {
+func (m *Manager) ListRunning() []protocol.ServerInfo {
 	m.mutex.Lock()
 	defer m.mutex.Unlock()
 
-	result := make([]client.ServerInfo, 0, len(m.servers))
+	result := make([]protocol.ServerInfo, 0, len(m.servers))
 
 	for _, server := range m.servers {
 
@@ -72,14 +73,14 @@ func (m *Manager) ListRunning() []client.ServerInfo {
 	return result
 }
 
-func MakeServerInfo(server *Server) (client.ServerInfo, error) {
+func MakeServerInfo(server *Server) (protocol.ServerInfo, error) {
 
 	cfg, err := config.Load(server.Name)
 	if err != nil {
-		return client.ServerInfo{}, err
+		return protocol.ServerInfo{}, err
 	}
 
-	serv := client.ServerInfo{
+	serv := protocol.ServerInfo{
 		Name:              server.Name,
 		Port:              server.Port,
 		AutomaticRestarts: server.AutomaticRestarts,
@@ -99,7 +100,7 @@ func (m *Manager) Stop(name string) error {
 		return errors.New("server is not running")
 	}
 
-	fmt.Printf("Stopping server %s\n", name)
+	ui.PrintInfo("Stopping server " + name)
 
 	server.AutomaticRestarts = false
 	server.PTY.Write([]byte("\nstop\n"))
@@ -157,18 +158,18 @@ func (m *Manager) Start(name string) error {
 		return err
 	}
 
-	fmt.Printf("%s started (PID %d)\n", name, cmd.Process.Pid)
+	ui.PrintSuccess(fmt.Sprintf("%s started (PID %d)\n", name, cmd.Process.Pid))
 
 	go func() {
 
 		err := cmd.Wait()
 
 		if err != nil {
-			fmt.Printf("%s exited: %v\n", name, err)
+			ui.PrintError(fmt.Sprintf("%s exited: %v\n", name, err))
 			send := fmt.Sprintf("\n----------- Server exited with error code %v, screen session can now be detached...\n", err)
 			server.Broadcast([]byte(send))
 		} else {
-			fmt.Printf("%s exited normally\n", name)
+			ui.PrintInfo(name + " exited normally")
 			server.Broadcast([]byte("\n----------- Server exited normally, screen session can now be detached...\n"))
 		}
 
@@ -176,9 +177,9 @@ func (m *Manager) Start(name string) error {
 
 		if server.AutomaticRestarts {
 			time.Sleep(5 * time.Second)
-			fmt.Printf("%s exited, automatic restart is turned on, restarting...\n", server.Name)
+			ui.PrintInfo(server.Name + " exited, automatic restart is turned on, restarting...")
 			if err := m.Start(name); err != nil {
-				fmt.Println(err)
+				ui.PrintError(err.Error())
 			}
 		}
 	}()
@@ -272,7 +273,7 @@ func (s *Server) Attach(c *ScreenClient) error {
 
 	for _, line := range s.Log.Snapshot() {
 		if _, err := fmt.Fprintf(c.Conn, "%s", line); err != nil {
-			fmt.Println("send failed:", err)
+			ui.PrintError("send failed: " + err.Error())
 			return err
 		}
 	}
@@ -304,7 +305,7 @@ func (s *Server) readInput(c *ScreenClient) {
 	for {
 		n, err := c.Conn.Read(buf)
 		if n > 0 {
-			fmt.Printf("received: %q\n", buf[:n])
+			ui.PrintInfo(fmt.Sprintf("received: %q\n", buf[:n]))
 			s.PTY.Write(buf[:n])
 		}
 		if err != nil {

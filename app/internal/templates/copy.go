@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io/fs"
 	"minecraft-manager/internal/paths"
+	"minecraft-manager/internal/ui"
 	"os"
 	"path/filepath"
 )
@@ -46,7 +47,7 @@ func CreateConfigJsonFile(destination string) error {
 
 	dst := paths.Config(destination)
 
-	fmt.Printf("Creating config file for destination %s\n", dst)
+	ui.PrintInfo("Creating config file for destination " + dst)
 
 	data, err := Files.ReadFile(paths.Templates(paths.ConfigJson))
 	if err != nil {

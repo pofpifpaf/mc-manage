@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"minecraft-manager/internal/paths"
 	"minecraft-manager/internal/protocol"
+	"minecraft-manager/internal/ui"
 	"net"
 	"os"
 )
@@ -20,12 +21,12 @@ func (d *Daemon) Listen() error {
 
 	defer listener.Close()
 
-	fmt.Println("Listening on", paths.SocketPath)
+	ui.PrintInfo("Listening on" + paths.SocketPath)
 
 	for {
 		conn, err := listener.Accept()
 		if err != nil {
-			fmt.Println("accept:", err)
+			ui.PrintError("accept: " + err.Error())
 			continue
 		}
 
@@ -44,12 +45,12 @@ func (d *Daemon) listenScreen() error {
 
 	defer listener.Close()
 
-	fmt.Println("Listening on", paths.ScreenSocketPath)
+	ui.PrintInfo("Screen - Listening on" + paths.ScreenSocketPath)
 
 	for {
 		conn, err := listener.Accept()
 		if err != nil {
-			fmt.Println("accept:", err)
+			ui.PrintError("accept: " + err.Error())
 			continue
 		}
 
@@ -59,7 +60,7 @@ func (d *Daemon) listenScreen() error {
 
 func (d *Daemon) handleScreenConn(conn net.Conn) {
 
-	fmt.Println("Received screen request")
+	ui.PrintInfo("Received screen request")
 
 	var req protocol.Request
 	if err := json.NewDecoder(conn).Decode(&req); err != nil {

@@ -3,14 +3,15 @@ package download
 import (
 	"fmt"
 	"io"
-	"minecraft-manager/internal/config"
 	"minecraft-manager/internal/paths"
+	"minecraft-manager/internal/protocol"
+	"minecraft-manager/internal/ui"
 	"net/http"
 	"os"
 	"path/filepath"
 )
 
-func RetrieveJarIfArchived(cfg *config.Config) (bool, error) {
+func RetrieveJarIfArchived(cfg *protocol.Config) (bool, error) {
 
 	jarArchivePath := filepath.Join(paths.Server(cfg.Name), cfg.Jar+"."+cfg.Version+".old")
 
@@ -24,11 +25,11 @@ func RetrieveJarIfArchived(cfg *config.Config) (bool, error) {
 	return false, nil
 }
 
-func DownloadJar(cfg *config.Config) error {
+func DownloadJar(cfg *protocol.Config) error {
 	var err error
 
 	if isArchived, _ := RetrieveJarIfArchived(cfg); isArchived {
-		fmt.Printf("Retrieved config file from archive for server %s and version %s\n", cfg.Name, cfg.Version)
+		ui.PrintInfo(fmt.Sprintf("Retrieved config file from archive for server %s and version %s", cfg.Name, cfg.Version))
 		return nil
 	}
 
@@ -39,13 +40,13 @@ func DownloadJar(cfg *config.Config) error {
 			return err
 		}
 	default:
-		fmt.Printf("%q, Unsupported type\n", cfg.Type)
+		ui.PrintError("\"" + cfg.Type + "\" Unsupported type")
 	}
 
 	return err
 }
 
-func DownloadCustomJar(cfg *config.Config, downloadURL string) error {
+func DownloadCustomJar(cfg *protocol.Config, downloadURL string) error {
 
 	resp, err := http.Get(downloadURL)
 	if err != nil {
@@ -53,7 +54,7 @@ func DownloadCustomJar(cfg *config.Config, downloadURL string) error {
 	}
 	defer resp.Body.Close()
 
-	fmt.Printf("Downloading from url %q\n", downloadURL)
+	ui.PrintInfo("Downloading from url \"" + downloadURL + "\"")
 
 	if resp.StatusCode != http.StatusOK {
 		return fmt.Errorf("unexpected status %s", resp.Status)
@@ -72,7 +73,7 @@ func DownloadCustomJar(cfg *config.Config, downloadURL string) error {
 	return nil
 }
 
-func ArchiveJarFile(cfg *config.Config) error {
+func ArchiveJarFile(cfg *protocol.Config) error {
 
 	oldPath := paths.Jar(cfg.Name, cfg.Jar)
 	newPath := filepath.Join(paths.Server(cfg.Name), cfg.Jar+"."+cfg.Version+".old")

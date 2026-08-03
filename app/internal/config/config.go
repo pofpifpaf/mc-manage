@@ -4,26 +4,13 @@ import (
 	"encoding/json"
 	"fmt"
 	"minecraft-manager/internal/paths"
+	"minecraft-manager/internal/protocol"
+	"minecraft-manager/internal/ui"
 	"os"
 	"strconv"
 )
 
-type Config struct {
-	Name               string   `json:"name"`
-	Type               string   `json:"type"`
-	Version            string   `json:"version"`
-	Java               string   `json:"java"`
-	Memory             string   `json:"memory"`
-	Jar                string   `json:"jar"`
-	Port               string   `json:"port"`
-	LevelName          string   `json:"level"`
-	AutomaticRestarts  bool     `json:"autorestart"`
-	StartOnBoot        bool     `json:"boot"`
-	AdditionalJVMArgs  []string `json:"additionaljvmargs"`
-	AdditionalServArgs []string `json:"additionalservargs"`
-}
-
-func (c *Config) Validate() error {
+func Validate(c protocol.Config) error {
 
 	if c.Java == "" {
 		return fmt.Errorf("missing java version")
@@ -40,7 +27,7 @@ func (c *Config) Validate() error {
 	return nil
 }
 
-func Load(server string) (*Config, error) {
+func Load(server string) (*protocol.Config, error) {
 	path := paths.Config(server)
 
 	data, err := os.ReadFile(path)
@@ -48,21 +35,21 @@ func Load(server string) (*Config, error) {
 		return nil, fmt.Errorf("couldn't read config: %w", err)
 	}
 
-	var cfg Config
+	var cfg protocol.Config
 
 	err = json.Unmarshal(data, &cfg)
 	if err != nil {
 		return nil, fmt.Errorf("invalid config: %w", err)
 	}
 
-	if err := cfg.Validate(); err != nil {
+	if err := Validate(cfg); err != nil {
 		return nil, err
 	}
 
 	return &cfg, nil
 }
 
-func Save(server string, cfg *Config) error {
+func Save(server string, cfg *protocol.Config) error {
 	path := paths.Config(server)
 
 	data, err := json.MarshalIndent(cfg, "", "    ")
@@ -73,7 +60,7 @@ func Save(server string, cfg *Config) error {
 	return os.WriteFile(path, data, 0644)
 }
 
-func updateAdditionalArgs(server string, fn func(*Config) error) error {
+func updateAdditionalArgs(server string, fn func(*protocol.Config) error) error {
 	configFilePath := paths.Config(server)
 
 	data, err := os.ReadFile(configFilePath)
@@ -81,7 +68,7 @@ func updateAdditionalArgs(server string, fn func(*Config) error) error {
 		return err
 	}
 
-	var cfg Config
+	var cfg protocol.Config
 	if err := json.Unmarshal(data, &cfg); err != nil {
 		return err
 	}
@@ -103,37 +90,49 @@ func removeAt(args []string, index int) ([]string, error) {
 		return nil, fmt.Errorf("index %d out of range", index+1)
 	}
 
-	fmt.Printf("Removing argument at index %d, which is %s\n", index+1, args[index])
+	ui.PrintInfo(fmt.Sprintf("Removing argument at index %d, which is %s\n", index+1, args[index]))
 
 	return append(args[:index], args[index+1:]...), nil
 }
 
 func addArg(args []string, arg string) []string {
 
-	fmt.Printf("Adding argument %s\n", arg)
+	ui.PrintInfo("Adding argument " + arg)
 
 	return append(args, arg)
 }
 
 func AddAdditionalJVMArg(server, arg string) error {
 
-	return updateAdditionalArgs(server, func(cfg *Config) error {
+	if err := updateAdditionalArgs(server, func(cfg *protocol.Config) error {
 
 		cfg.AdditionalJVMArgs = addArg(cfg.AdditionalJVMArgs, arg)
 		return nil
-	})
+	}); err != nil {
+		return err
+	}
+
+	ui.PrintSuccess("Added JVM Arg \"" + arg + "\" to server " + server)
+	return nil
 }
 
 func AddAdditionalServArg(server, arg string) error {
-	return updateAdditionalArgs(server, func(cfg *Config) error {
+
+	if err := updateAdditionalArgs(server, func(cfg *protocol.Config) error {
 
 		cfg.AdditionalServArgs = addArg(cfg.AdditionalServArgs, arg)
 		return nil
-	})
+	}); err != nil {
+		return err
+	}
+
+	ui.PrintSuccess("Added Serv Arg \"" + arg + "\" to server " + server)
+	return nil
 }
 
 func RemoveAdditionalJVMArg(server, argIndex string) error {
-	return updateAdditionalArgs(server, func(cfg *Config) error {
+
+	if err := updateAdditionalArgs(server, func(cfg *protocol.Config) error {
 		index, err := strconv.Atoi(argIndex)
 		if err != nil {
 			return err
@@ -143,11 +142,17 @@ func RemoveAdditionalJVMArg(server, argIndex string) error {
 
 		cfg.AdditionalJVMArgs, err = removeAt(cfg.AdditionalJVMArgs, index)
 		return err
-	})
+	}); err != nil {
+		return err
+	}
+
+	ui.PrintSuccess("Removed JVM Arg")
+	return nil
 }
 
 func RemoveAdditionalServArg(server, argIndex string) error {
-	return updateAdditionalArgs(server, func(cfg *Config) error {
+
+	if err := updateAdditionalArgs(server, func(cfg *protocol.Config) error {
 		index, err := strconv.Atoi(argIndex)
 		if err != nil {
 			return err
@@ -157,5 +162,9 @@ func RemoveAdditionalServArg(server, argIndex string) error {
 
 		cfg.AdditionalServArgs, err = removeAt(cfg.AdditionalServArgs, index)
 		return err
-	})
+	}); err != nil {
+		return err
+	}
+	ui.PrintSuccess("Removed Serv Arg")
+	return nil
 }

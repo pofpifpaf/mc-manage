@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"minecraft-manager/internal/ui"
 	"net/http"
 	"os"
 )
@@ -65,7 +66,7 @@ func versionMetadataURL(version string) (string, error) {
 
 func DownloadVanilla(version, destination string) error {
 
-	fmt.Printf("Downloading %q for version %q\n", destination, version)
+	ui.PrintInfo(fmt.Sprintf("Downloading %q for version %q", destination, version))
 
 	metadataURL, err := versionMetadataURL(version)
 	if err != nil {
@@ -98,7 +99,7 @@ func DownloadVanilla(version, destination string) error {
 	}
 	defer resp.Body.Close()
 
-	fmt.Printf("Downloading from url %q\n", info.Downloads.Server.URL)
+	ui.PrintInfo(fmt.Sprintf("Downloading from url %q", info.Downloads.Server.URL))
 
 	if resp.StatusCode != http.StatusOK {
 		return fmt.Errorf("unexpected status %s", resp.Status)

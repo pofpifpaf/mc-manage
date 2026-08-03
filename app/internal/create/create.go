@@ -7,6 +7,7 @@ import (
 	"minecraft-manager/internal/download"
 	"minecraft-manager/internal/paths"
 	"minecraft-manager/internal/templates"
+	"minecraft-manager/internal/ui"
 	"os"
 )
 
@@ -17,7 +18,7 @@ func Create(name, serverType, version string) error {
 
 	serverDir := paths.Server(name)
 
-	fmt.Printf("Creating server %q\n", name)
+	ui.PrintInfo("Creating server \"" + name + "\"")
 
 	if _, err := os.Stat(serverDir); err == nil {
 		return fmt.Errorf("server %q already exists", name)
@@ -44,7 +45,7 @@ func Create(name, serverType, version string) error {
 	cfg.Version = version
 	cfg.Type = serverType
 
-	fmt.Printf("Saving config file with default config\n")
+	ui.PrintInfo("Saving config file with default config")
 	if err := config.Save(name, cfg); err != nil {
 		return err
 	}
@@ -53,7 +54,7 @@ func Create(name, serverType, version string) error {
 		return err
 	}
 
-	fmt.Printf("Created server %q\n", name)
+	ui.PrintSuccess("Created server \"" + name + "\"")
 
 	return nil
 }
@@ -80,7 +81,7 @@ func ImportServer(name, serverType, version string) error {
 		return err
 	}
 
-	fmt.Printf("Created config file at %s\n", paths.Config(name))
+	ui.PrintInfo("Created config file at " + paths.Config(name))
 
 	cfg, err := config.Load(name)
 	if err != nil {
@@ -94,17 +95,17 @@ func ImportServer(name, serverType, version string) error {
 	serverPropertiesPath := paths.ServerProperties(name)
 	if _, err := os.Stat(serverPropertiesPath); err == nil {
 
-		fmt.Printf("Found server.properties file at %s\n", serverPropertiesPath)
+		ui.PrintInfo("Found server.properties file at " + serverPropertiesPath)
 
 		port, err := config.GetServerProperty(serverPropertiesPath, "server-port")
 		if err == nil {
-			fmt.Printf("Found server-port key, port = %s\n", port)
+			ui.PrintInfo("Found server-port key, port = " + port)
 			cfg.Port = port
 		}
 
 		worldName, err := config.GetServerProperty(serverPropertiesPath, "level-name")
 		if err == nil {
-			fmt.Printf("Found level-name key, world = %s\n", worldName)
+			ui.PrintInfo("Found level-name key, world = " + worldName)
 			cfg.LevelName = worldName
 		}
 	}
@@ -114,14 +115,14 @@ func ImportServer(name, serverType, version string) error {
 	}
 
 	if err := download.DownloadJar(cfg); err != nil {
-		fmt.Printf("unable to download jar : %s", err)
+		ui.PrintError("unable to download jar :" + err.Error())
 	}
 
 	if _, err := os.Stat(paths.Eula(name)); err != nil {
-		fmt.Println("WARNING : no eula.txt file found")
+		ui.PrintWarning("No eula.txt file found")
 	}
 
-	fmt.Printf("Successfully imported server %s into manager\n", name)
+	ui.PrintSuccess("Imported server \"" + name + "\" into manager")
 
 	return nil
 }

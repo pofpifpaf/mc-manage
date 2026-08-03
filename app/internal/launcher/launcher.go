@@ -5,6 +5,7 @@ import (
 	"minecraft-manager/internal/config"
 	"minecraft-manager/internal/java"
 	"minecraft-manager/internal/paths"
+	"minecraft-manager/internal/ui"
 	"os"
 	"os/exec"
 )
@@ -47,7 +48,7 @@ func Build(server string) (*exec.Cmd, bool, string, error) {
 
 	cmd.Dir = serverDir
 
-	fmt.Printf("Starting %s, with Java Path: %s and Server Directory : %s \n", cfg.Name, javaPath, serverDir)
+	ui.PrintInfo(fmt.Sprintf("Starting %s, with Java Path: %s and Server Directory : %s \n", cfg.Name, javaPath, serverDir))
 
 	return cmd, cfg.AutomaticRestarts, cfg.Port, nil
 }

@@ -10,33 +10,16 @@ import (
 	"minecraft-manager/internal/java"
 	"minecraft-manager/internal/paths"
 	"minecraft-manager/internal/protocol"
+	"minecraft-manager/internal/ui"
 	"net"
 	"os"
 	"path/filepath"
 	"strconv"
-	"time"
 )
 
-type ServerInfo struct {
-	Name              string
-	Port              string
-	AutomaticRestarts bool
-	StartedAt         time.Time
-	Running           bool
-	Version           string
-	JavaVersion       string
-	StartOnBoot       bool
-}
+func makeServerInfoListInterface(data []interface{}) ([]protocol.ServerInfo, error) {
 
-type ServerPSResponse struct {
-	OK      bool         `json:"ok"`
-	Message string       `json:"message,omitempty"`
-	Data    []ServerInfo `json:"data"`
-}
-
-func makeServerInfoListInterface(data []interface{}) ([]ServerInfo, error) {
-
-	servers := make([]ServerInfo, len(data))
+	servers := make([]protocol.ServerInfo, len(data))
 
 	for i, v := range data {
 		m := v.(map[string]interface{})
@@ -46,7 +29,7 @@ func makeServerInfoListInterface(data []interface{}) ([]ServerInfo, error) {
 			return nil, err
 		}
 
-		var server ServerInfo
+		var server protocol.ServerInfo
 		if err := json.Unmarshal(b, &server); err != nil {
 			return nil, err
 		}
@@ -57,14 +40,14 @@ func makeServerInfoListInterface(data []interface{}) ([]ServerInfo, error) {
 	return servers, nil
 }
 
-func makeServerInfoInterface(data interface{}) (ServerInfo, error) {
+func makeServerInfoInterface(data interface{}) (protocol.ServerInfo, error) {
 
 	b, err := json.Marshal(data)
 	if err != nil {
-		return ServerInfo{}, err
+		return protocol.ServerInfo{}, err
 	}
 
-	var info ServerInfo
+	var info protocol.ServerInfo
 	err = json.Unmarshal(b, &info)
 
 	return info, err
@@ -108,23 +91,23 @@ func send(req protocol.Request) error {
 
 		servers, _ := makeServerInfoListInterface(resp.Data.([]interface{}))
 
-		printRunningServers(servers)
+		ui.PrintRunningServers(servers)
 
 	case "START", "STOP":
-		fmt.Printf("Daemon responded without error - %s\n", resp.Message)
+		ui.PrintSuccess(resp.Message)
 
 	case "SET":
-		fmt.Printf("SET - %s\n", resp.Message)
+		ui.PrintSuccess("SET - " + resp.Message)
 
 	case "PING":
 		if resp.Message == "PONG" {
-			fmt.Println("Ping successful, daemon is running")
+			ui.PrintSuccess("Ping successful, daemon is running")
 		} else {
-			fmt.Println("Ping failure, received ", resp.Message)
+			ui.PrintError("Ping failure, received " + resp.Message)
 		}
 
 	default:
-		fmt.Printf("Response: %q\n", resp.Message)
+		ui.PrintInfo("Response: %q" + resp.Message)
 	}
 
 	return nil
@@ -171,7 +154,7 @@ func GetList() error {
 		return err
 	}
 
-	printServerList(allServers)
+	ui.PrintServerList(allServers)
 
 	return nil
 }
@@ -192,9 +175,9 @@ func daemonIsServerRunning(name string) (bool, error) {
 	}
 }
 
-func MakeList() ([]ServerInfo, error) {
+func MakeList() ([]protocol.ServerInfo, error) {
 
-	var result []ServerInfo
+	var result []protocol.ServerInfo
 
 	err := filepath.WalkDir(paths.ServerRoot, func(path string, d fs.DirEntry, err error) error {
 		if err != nil {
@@ -208,7 +191,7 @@ func MakeList() ([]ServerInfo, error) {
 
 				cfg, err := config.Load(d.Name())
 				if err == nil {
-					server := ServerInfo{
+					server := protocol.ServerInfo{
 						Name:              d.Name(),
 						Port:              cfg.Port,
 						AutomaticRestarts: cfg.AutomaticRestarts,
@@ -289,10 +272,10 @@ func SetParameter(server, arg1, arg2 string) error {
 		}
 
 	default:
-		return errors.New("Incorrect set paramater")
+		return fmt.Errorf("Incorrect set paramater %s", arg1)
 	}
 
-	fmt.Printf("Successfully changed parameter %s for server %s to %q\n", arg1, server, arg2)
+	ui.PrintSuccess("Successfully changed parameter " + arg1 + " for server " + server + " to \"" + arg2 + "\"")
 
 	return nil
 }
@@ -347,11 +330,12 @@ func setServerAutoRestart(name, autoRestart string) error {
 			Data:    autoRestart,
 		})
 	} else {
-		return errors.New("unrecognized argument to autorestart")
+		return fmt.Errorf("unrecognized argument to autorestart")
 	}
 }
 
 func setServerVersion(name, serverVersion string) error {
+
 	cfg, err := config.Load(name)
 	if err != nil {
 		return err
@@ -364,13 +348,13 @@ func setServerVersion(name, serverVersion string) error {
 	}
 
 	if err := download.ArchiveJarFile(cfg); err != nil {
-		fmt.Print("Unable to archive old jar file\n")
+		ui.PrintWarning("Unable to archive old jar file")
 	}
 
 	cfg.Version = serverVersion
 
 	if err := download.DownloadJar(cfg); err != nil {
-		fmt.Printf("Unable to find version %s, undoing changes...", serverVersion)
+		ui.PrintError("Unable to find version \"" + serverVersion + "\", undoing changes...")
 		cfg.Version = oldServerVersion
 		download.RetrieveJarIfArchived(cfg)
 		return err
@@ -434,7 +418,7 @@ func InspectServer(name string) error {
 		return err
 	}
 
-	serverInfo := ServerInfo{}
+	serverInfo := protocol.ServerInfo{}
 
 	if !resp.OK {
 		serverInfo.Running = false
@@ -447,7 +431,7 @@ func InspectServer(name string) error {
 		return err
 	}
 
-	printInspectServer(serverInfo, cfg)
+	ui.PrintInspectServer(serverInfo, cfg)
 
 	return nil
 }

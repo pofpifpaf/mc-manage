@@ -6,12 +6,13 @@ import (
 	"minecraft-manager/internal/config"
 	"minecraft-manager/internal/create"
 	"minecraft-manager/internal/daemon"
+	"minecraft-manager/internal/ui"
 	"os"
 )
 
 func main() {
 	if err := run(); err != nil {
-		fmt.Println("Error:", err)
+		ui.PrintError(err.Error())
 		os.Exit(1)
 	}
 }

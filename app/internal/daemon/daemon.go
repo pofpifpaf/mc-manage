@@ -3,6 +3,7 @@ package daemon
 import (
 	"fmt"
 	"minecraft-manager/internal/client"
+	"minecraft-manager/internal/ui"
 	"os"
 	"os/signal"
 	"syscall"
@@ -28,7 +29,7 @@ func (d *Daemon) Run() error {
 
 	go func() {
 		if err := d.listenScreen(); err != nil {
-			fmt.Println("screen listener error:", err)
+			ui.PrintError("screen listener error: " + err.Error())
 			os.Exit(1)
 		}
 	}()
@@ -37,10 +38,10 @@ func (d *Daemon) Run() error {
 		return fmt.Errorf("daemon already running")
 	}
 
-	fmt.Println("Starting servers that need to be started on boot")
+	ui.PrintInfo("Starting servers that need to be started on boot")
 	servers, err := client.MakeList()
 	if err != nil {
-		fmt.Printf("Unable to check for start on boot servers, err = %s\n", err)
+		ui.PrintError("Unable to check for start on boot servers, err = " + err.Error())
 	}
 	for _, server := range servers {
 		if server.StartOnBoot {
@@ -48,8 +49,8 @@ func (d *Daemon) Run() error {
 		}
 	}
 
-	fmt.Println("Minecraft manager daemon started")
-	fmt.Println("PID:", os.Getpid())
+	ui.PrintInfo("Minecraft manager daemon started")
+	ui.PrintInfo(fmt.Sprintf("PID: %d", os.Getpid()))
 
 	// Wait for shutdown signals
 	signals := make(chan os.Signal, 1)

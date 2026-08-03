@@ -7,6 +7,7 @@ import (
 	"io"
 	"minecraft-manager/internal/paths"
 	"minecraft-manager/internal/protocol"
+	"minecraft-manager/internal/ui"
 	"net"
 	"os"
 	"strings"
@@ -21,7 +22,7 @@ func Screen(server string) error {
 		return fmt.Errorf("connect screen socket: %w", err)
 	}
 
-	fmt.Println("Connected to screen socket")
+	ui.PrintInfo("Connected to screen socket")
 
 	req := protocol.Request{
 		Command: "SCREEN",
