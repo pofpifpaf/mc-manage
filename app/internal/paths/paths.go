@@ -1,6 +1,9 @@
 package paths
 
-import "path/filepath"
+import (
+	"fmt"
+	"path/filepath"
+)
 
 const (
 	ServerRoot       = "/servers"
@@ -36,6 +39,10 @@ func Jar(name, jar string) string {
 
 func Log(name string) string {
 	return filepath.Join(Server(name), Logs)
+}
+
+func PidStatus(pid int) string {
+	return filepath.Join("/proc", fmt.Sprintf("%d", pid), "smaps_rollup")
 }
 
 func Java(version string) string {

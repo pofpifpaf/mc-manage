@@ -41,7 +41,7 @@ func run() error {
 		return client.PingDaemon()
 
 	case "ps":
-		return client.GetPS()
+		return client.GetPS() // TODO ADD RAM MEMORY USAGE
 
 	case "list":
 		return client.GetList()

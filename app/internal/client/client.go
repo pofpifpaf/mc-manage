@@ -174,6 +174,18 @@ func SetParameter(server, arg1, arg2 string) error {
 			return err
 		}
 
+	case "mem-allocated", "xms", "mem-a":
+
+		if err := setAllocatedMemory(server, arg2); err != nil {
+			return err
+		}
+
+	case "mem-max", "xmx", "mem-m":
+
+		if err := setMaxMemory(server, arg2); err != nil {
+			return err
+		}
+
 	default:
 		return fmt.Errorf("Incorrect set parameter %s", arg1)
 	}
@@ -290,6 +302,38 @@ func setWorldName(name, worldName string) error {
 	}
 
 	return config.SetServerProperty(serverPropertiesPath, config.LevelNamePropertyKey, worldName)
+}
+
+func setAllocatedMemory(server, mem string) error {
+
+	if err := config.ValidateMemoryConfig(mem); err != nil {
+		return err
+	}
+
+	cfg, err := config.Load(server)
+	if err != nil {
+		return err
+	}
+
+	cfg.MemoryAllocated = mem
+
+	return config.Save(server, cfg)
+}
+
+func setMaxMemory(server, mem string) error {
+
+	if err := config.ValidateMemoryConfig(mem); err != nil {
+		return err
+	}
+
+	cfg, err := config.Load(server)
+	if err != nil {
+		return err
+	}
+
+	cfg.MemoryMax = mem
+
+	return config.Save(server, cfg)
 }
 
 func SetGracePeriod(period string) error {

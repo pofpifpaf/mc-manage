@@ -30,8 +30,8 @@ func Build(server string) (*exec.Cmd, bool, string, error) {
 	}
 
 	args := []string{
-		"-Xms" + cfg.Memory,
-		"-Xmx" + cfg.Memory,
+		"-Xms" + cfg.MemoryAllocated,
+		"-Xmx" + cfg.MemoryMax,
 	}
 
 	args = append(args, cfg.AdditionalJVMArgs...)

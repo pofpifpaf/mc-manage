@@ -54,8 +54,8 @@ func PrintRunningServers(servers []protocol.ServerInfo) {
 	w := tabwriter.NewWriter(os.Stdout, 0, 0, 2, ' ', 0)
 	defer w.Flush()
 
-	fmt.Fprintln(w, "NAME\tVERSION\tJAVA\tPORT\tAUTO RESTART\tBOOT\tSIZE\tUPTIME\tPLAYERS\tSTATE")
-	fmt.Fprintln(w, "----\t-------\t----\t----\t------------\t----\t----\t------\t-------\t-----")
+	fmt.Fprintln(w, "NAME\tVERSION\tJAVA\tPORT\tAUTO RESTART\tBOOT\tSIZE\tUPTIME\tPLAYERS\tMEM\tSTATE")
+	fmt.Fprintln(w, "----\t-------\t----\t----\t------------\t----\t----\t------\t-------\t---\t-----")
 
 	for _, server := range servers {
 
@@ -67,9 +67,14 @@ func PrintRunningServers(servers []protocol.ServerInfo) {
 			playerString = fmt.Sprintf("%d/%d", server.PlayersOnline, server.PlayersOnlineMax)
 		}
 
+		memString := "-"
+		if server.MemoryUsed != 0 {
+			memString = paths.HumanBytes(server.MemoryUsed)
+		}
+
 		fmt.Fprintf(
 			w,
-			"%s\t%s\t%s\t%s\t%t\t%t\t%s\t%s\t%s\t%s\n",
+			"%s\t%s\t%s\t%s\t%t\t%t\t%s\t%s\t%s\t%s\t%s\n",
 			server.Name,
 			server.Version,
 			server.JavaVersion,
@@ -79,6 +84,7 @@ func PrintRunningServers(servers []protocol.ServerInfo) {
 			dirSize,
 			uptime,
 			playerString,
+			memString,
 			server.Running,
 		)
 	}
@@ -143,7 +149,8 @@ func PrintInspectServer(server protocol.ServerInfo, cfg *protocol.Config) {
 	fmt.Fprintf(w, "Type\t%s\n", cfg.Type)
 	fmt.Fprintf(w, "Version\t%s\n", cfg.Version)
 	fmt.Fprintf(w, "Java Version\t%s\n", cfg.Java)
-	fmt.Fprintf(w, "Memory allocation\t%s\n", cfg.Memory)
+	fmt.Fprintf(w, "Memory Allocated\t%s\n", cfg.MemoryAllocated)
+	fmt.Fprintf(w, "Memory Max\t%s\n", cfg.MemoryMax)
 	fmt.Fprintf(w, "Jar file name\t%s\n", cfg.Jar)
 	fmt.Fprintf(w, "Server port\t%s\n", cfg.Port)
 	fmt.Fprintf(w, "Level name used\t%s\n", cfg.LevelName)
@@ -156,14 +163,23 @@ func PrintInspectServer(server protocol.ServerInfo, cfg *protocol.Config) {
 	if server.Running != protocol.StateStopped {
 		uptime := time.Since(server.StartedAt).Round(time.Second)
 		fmt.Fprintf(w, "Uptime\t%s\n", uptime)
+
 		if server.PlayersOnlineMax == -1 {
 			fmt.Fprintln(w, "Players\t-/-")
 		} else {
 			fmt.Fprintf(w, "Players\t%d/%d\n", server.PlayersOnline, server.PlayersOnlineMax)
 		}
+
+		if server.MemoryUsed != 0 {
+			fmt.Fprintf(w, "Memory Used\t%s\n", paths.HumanBytes(server.MemoryUsed))
+		} else {
+			fmt.Fprintln(w, "Memory Used\t-")
+		}
+
 	} else {
 		fmt.Fprintln(w, "Uptime\t-")
 		fmt.Fprintln(w, "Players\t-/-")
+		fmt.Fprintln(w, "Memory Used\t-")
 	}
 
 	fmt.Fprintln(w, "")

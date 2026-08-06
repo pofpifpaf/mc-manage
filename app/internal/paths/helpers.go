@@ -25,10 +25,10 @@ func DirSize(path string) (string, error) {
 		return nil
 	})
 
-	return humanBytes(size), err
+	return HumanBytes(size), err
 }
 
-func humanBytes(size int64) string {
+func HumanBytes(size int64) string {
 	const unit = 1024
 	if size < unit {
 		return fmt.Sprintf("%d B", size)

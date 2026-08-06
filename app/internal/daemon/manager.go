@@ -1,15 +1,19 @@
 package daemon
 
 import (
+	"bufio"
 	"fmt"
 	"minecraft-manager/internal/config"
 	"minecraft-manager/internal/launcher"
+	"minecraft-manager/internal/paths"
 	"minecraft-manager/internal/protocol"
 	"minecraft-manager/internal/ringbuffer"
 	"minecraft-manager/internal/ui"
 	"net"
 	"os"
 	"os/exec"
+	"strconv"
+	"strings"
 	"sync"
 	"time"
 
@@ -81,6 +85,11 @@ func MakeServerInfo(server *Server) (protocol.ServerInfo, error) {
 		return protocol.ServerInfo{}, err
 	}
 
+	memoryUsed, err := server.getMemoryUsed()
+	if err != nil {
+		ui.PrintError(fmt.Sprintf("Could not get memory used for server %s, err: %s", server.Name, err.Error()))
+	}
+
 	serv := protocol.ServerInfo{
 		Name:              server.Name,
 		Port:              server.Port,
@@ -89,6 +98,7 @@ func MakeServerInfo(server *Server) (protocol.ServerInfo, error) {
 		Running:           protocol.StateRunning,
 		Version:           cfg.Version,
 		JavaVersion:       cfg.Java,
+		MemoryUsed:        memoryUsed,
 	}
 
 	return serv, nil
@@ -150,6 +160,8 @@ func (m *Manager) Kill(server string) error {
 	m.mutex.Lock()
 	defer m.mutex.Unlock()
 
+	ui.PrintInfo(fmt.Sprintf("Sending kill command to server %s", server))
+
 	serv, exist := m.Get(server)
 	if !exist {
 		return fmt.Errorf("server is not running")
@@ -175,7 +187,7 @@ func (m *Manager) Kill(server string) error {
 func (m *Manager) Start(name string) error {
 
 	if m.servers[name] != nil {
-		return fmt.Errorf("server %s is already running")
+		return fmt.Errorf("server %s is already running", name)
 	}
 
 	cmd, autorestarts, port, err := launcher.Build(name)
@@ -388,4 +400,39 @@ func (s *Server) readInput(c *ScreenClient) {
 			break
 		}
 	}
+}
+
+func (s *Server) getMemoryUsed() (int64, error) {
+	pidStatusPath := paths.PidStatus(s.Cmd.Process.Pid)
+
+	f, err := os.Open(pidStatusPath)
+	if err != nil {
+		return 0, err
+	}
+	defer f.Close()
+
+	scanner := bufio.NewScanner(f)
+	for scanner.Scan() {
+		line := scanner.Text()
+		if strings.HasPrefix(line, "Pss:") {
+
+			fields := strings.Fields(line)
+			if len(fields) < 2 {
+				return 0, fmt.Errorf("malformed Pss line: %q", line)
+			}
+
+			pssKB, err := strconv.ParseInt(fields[1], 10, 64)
+			if err != nil {
+				return 0, err
+			}
+
+			return pssKB * 1000, nil // KB -> B
+		}
+	}
+
+	if err := scanner.Err(); err != nil {
+		return 0, err
+	}
+
+	return 0, fmt.Errorf("Pss not found")
 }

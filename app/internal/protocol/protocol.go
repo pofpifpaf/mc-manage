@@ -29,7 +29,8 @@ type Config struct {
 	Type               string   `json:"type"`
 	Version            string   `json:"version"`
 	Java               string   `json:"java"`
-	Memory             string   `json:"memory"`
+	MemoryAllocated    string   `json:"memoryAllocated"`
+	MemoryMax          string   `json:"memoryMax"`
 	Jar                string   `json:"jar"`
 	Port               string   `json:"port"`
 	LevelName          string   `json:"level"`
@@ -58,6 +59,7 @@ type ServerInfo struct {
 	StartOnBoot       bool
 	PlayersOnline     int
 	PlayersOnlineMax  int
+	MemoryUsed        int64
 }
 
 type ServerPSResponse struct {

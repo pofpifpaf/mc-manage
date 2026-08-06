@@ -10,23 +10,6 @@ import (
 	"strconv"
 )
 
-func Validate(c protocol.Config) error {
-
-	if c.Java == "" {
-		return fmt.Errorf("missing java version")
-	}
-
-	if c.Memory == "" {
-		return fmt.Errorf("missing memory")
-	}
-
-	if c.Jar == "" {
-		return fmt.Errorf("missing jar")
-	}
-
-	return nil
-}
-
 func Load(server string) (*protocol.Config, error) {
 	path := paths.Config(server)
 
@@ -42,7 +25,7 @@ func Load(server string) (*protocol.Config, error) {
 		return nil, fmt.Errorf("invalid config: %w", err)
 	}
 
-	if err := Validate(cfg); err != nil {
+	if err := ValidateConfig(cfg); err != nil {
 		return nil, err
 	}
 
