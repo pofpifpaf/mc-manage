@@ -6,6 +6,7 @@ import (
 	"minecraft-manager/internal/config"
 	"minecraft-manager/internal/create"
 	"minecraft-manager/internal/daemon"
+	"minecraft-manager/internal/templates"
 	"minecraft-manager/internal/ui"
 	"os"
 )
@@ -41,7 +42,7 @@ func run() error {
 		return client.PingDaemon()
 
 	case "ps":
-		return client.GetPS() // TODO ADD RAM MEMORY USAGE
+		return client.GetPS()
 
 	case "list":
 		return client.GetList()
@@ -66,6 +67,9 @@ func run() error {
 
 	case "set":
 		if len(os.Args) != 5 {
+			if len(os.Args) == 3 && os.Args[2] == "help" {
+				return ui.PrintSetHelpMessage()
+			}
 			return fmt.Errorf("usage: manager set <server> <parameter> <argument>")
 		}
 		return client.SetParameter(os.Args[2], os.Args[3], os.Args[4])
@@ -117,7 +121,7 @@ func run() error {
 
 	case "help", "--help", "-?", "?":
 
-		return fmt.Errorf("not yet implemented") // TODO
+		return ui.PrintMainHelpMessage()
 
 	case "inspect":
 
@@ -134,6 +138,10 @@ func run() error {
 		}
 
 		return client.SetGracePeriod(os.Args[2])
+
+	case "get-sample-cfg":
+
+		return templates.PrintConfigFile()
 
 	case "motd":
 

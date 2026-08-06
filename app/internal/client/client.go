@@ -187,7 +187,7 @@ func SetParameter(server, arg1, arg2 string) error {
 		}
 
 	default:
-		return fmt.Errorf("Incorrect set parameter %s", arg1)
+		return fmt.Errorf("Incorrect set parameter %s, see manager set help for more information", arg1)
 	}
 
 	ui.PrintSuccess("Successfully changed parameter " + arg1 + " for server " + server + " to \"" + arg2 + "\"")

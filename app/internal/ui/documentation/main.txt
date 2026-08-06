@@ -1,0 +1,68 @@
+
+MC Manage is a Go-based CLI interface for creating, running and managing minecraft servers.
+
+Correct operation and most commands require a daemon to run in the background. 
+
+Server names correspond to the names of the directories under the servers folder (by default, /servers). Each server folder must have a correctly formed config.json file for them to be managed by mc-manage. Use "manager get-sample-cfg" to print a standard config file to stdout.
+
+GitHub page: https://github.com/pofpifpaf/mc-manage
+
+Server types available in this version are :
+        - vanilla
+
+Usage: manager [options...]
+    daemon                  
+            executes the daemon
+    ping                    
+            sends a ping request with the daemon, checking if it is running
+    
+    create [server-name] [server-type] [version]
+            creates the directory and copies a template for the chosen type, along with a jar file for the specified version
+    
+    import [folder-name] [server-type] [version]
+            creates a config.json file for the specified folder and downloads the appropriate jar
+    
+    list                    
+            lists all servers present in the servers folder and that are manageable by mc-manager
+   
+    ps                      
+            lists all managed and running servers
+    
+    inspect [server-name]   
+            gives a complete view of the server's parameters and status 
+    
+    start [server-name]     
+            sends a start command to the daemon to the specified server.
+    
+    stop [server-name]      
+            sends a "\nstop\n" command to the stdin of the specified server. The server will not restart even if autorestart is set to true when this command is used.
+   
+    kill [server-name]      
+            sends a kill signal to the specified server. The server will not restart even if autorestart is set to true when this command is used.
+    
+    screen [server-name]    
+            connects to the standard i/o of the specified server
+    
+    get-sample-cfg          
+            prints out a sample config.json file to standard output
+    
+    set [server-name] [parameter] [argument]
+            sets a specific parameter, see "manager set --help" for more information
+    
+    set-property [server-name] [key] [value]
+            changes the specified key in the server's server.properties file to the specified value. No validation checks are done.
+    
+    download [server-name] [URL]
+            downloads the file at URL and moves it to <servers-folder>/<server-name>/<config-jarfile-name>
+    
+    grace-period [time-s]   
+            modifies the grace period given to servers before they are killed when the daemon is shutting down.
+    
+    add-launch-arg, ala [jvm/serv] [server-name] [arg]
+            adds a jvm/server argument to the specified server that will be used when issuing a start command. The specified argument will be placed last. No validation checks are done.
+
+    rem-launch-arg, rla [jvm/serv] [server-name] [index]
+            removes the jvm/server argument at index "index". Indexes start at one. A list of configured additional arguments along with their indexes are visible with "manager inspect"
+
+    help, --help, ?, -?     
+            shows this help message.

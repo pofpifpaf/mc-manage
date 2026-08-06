@@ -1,12 +1,17 @@
 package ui
 
 import (
+	"bufio"
+	"embed"
 	"fmt"
 	"minecraft-manager/internal/paths"
 	"minecraft-manager/internal/protocol"
 	"os"
+	"strings"
 	"text/tabwriter"
 	"time"
+
+	"golang.org/x/term"
 )
 
 const (
@@ -25,8 +30,11 @@ const (
 	cWhite  = "\033[37m"
 )
 
-func PrintError(errorStr string) {
-	fmt.Printf(cRed+"[ERROR] "+ansiReset+"%s\n", errorStr)
+//go:embed documentation/*
+var Files embed.FS
+
+func PrintError(msg string) {
+	fmt.Fprintf(os.Stderr, cRed+"[ERROR] "+ansiReset+"%s\n", msg)
 }
 
 func PrintWarning(warnStr string) {
@@ -103,7 +111,7 @@ func PrintServerList(servers []protocol.ServerInfo) {
 	w := tabwriter.NewWriter(os.Stdout, 0, 0, 2, ' ', 0)
 	defer w.Flush()
 
-	fmt.Fprintln(w, "NAME\tVERSION\tJAVA\tPORT\tAUTO RESTART\tSIZE\tBOOT\tRUNNING")
+	fmt.Fprintln(w, "NAME\tVERSION\tJAVA\tPORT\tAUTO RESTART\tSIZE\tBOOT\tSTATE")
 	fmt.Fprintln(w, "----\t-------\t----\t----\t------------\t----\t----\t-------")
 
 	for _, server := range servers {
@@ -199,4 +207,95 @@ func PrintInspectServer(server protocol.ServerInfo, cfg *protocol.Config) {
 	for index, arg := range cfg.AdditionalServArgs {
 		fmt.Fprintf(w, "\t%d - %s\n", index+1, arg)
 	}
+}
+
+func wrapLine(s string, width int) string {
+	indentLen := len(s) - len(strings.TrimLeft(s, " "))
+	indent := s[:indentLen]
+	text := strings.TrimSpace(s)
+
+	if len(indent)+len(text) <= width {
+		return s
+	}
+
+	words := strings.Fields(text)
+
+	var b strings.Builder
+	b.WriteString(indent)
+
+	lineLen := indentLen
+
+	for i, word := range words {
+		if i == 0 {
+			b.WriteString(word)
+			lineLen += len(word)
+			continue
+		}
+
+		if lineLen+1+len(word) > width {
+			b.WriteByte('\n')
+			b.WriteString(indent)
+			b.WriteString(word)
+			lineLen = indentLen + len(word)
+		} else {
+			b.WriteByte(' ')
+			b.WriteString(word)
+			lineLen += 1 + len(word)
+		}
+	}
+
+	return b.String()
+}
+
+func printEmbeddedFile(filename string) error {
+	file, err := Files.Open(filename)
+	if err != nil {
+		return err
+	}
+
+	width := -1
+
+	if term.IsTerminal(int(os.Stdout.Fd())) {
+		w, _, err := term.GetSize(int(os.Stdout.Fd()))
+		if err == nil {
+			width = w
+		}
+	}
+
+	scanner := bufio.NewScanner(file)
+	for scanner.Scan() {
+		line := scanner.Text()
+
+		if width > 0 {
+			line = wrapLine(line, width)
+		}
+
+		fmt.Println(line)
+	}
+
+	if err := scanner.Err(); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func PrintMainHelpMessage() error {
+
+	width := 80
+	if w, _, err := term.GetSize(int(os.Stdout.Fd())); err == nil {
+		width = w
+	}
+
+	if width > 92 {
+		if err := printEmbeddedFile("documentation/logo.txt"); err != nil {
+			return err
+		}
+	}
+
+	return printEmbeddedFile("documentation/main.txt")
+}
+
+func PrintSetHelpMessage() error {
+	return printEmbeddedFile("documentation/set.txt")
 }
