@@ -151,3 +151,33 @@ func RemoveAdditionalServArg(server, argIndex string) error {
 	ui.PrintSuccess("Removed Serv Arg")
 	return nil
 }
+
+func LoadMainConfig() (*protocol.MainConfig, error) {
+	path := paths.MainConfig()
+
+	data, err := os.ReadFile(path)
+	if err != nil {
+		return nil, fmt.Errorf("couldn't read config: %w", err)
+	}
+
+	var cfg protocol.MainConfig
+
+	err = json.Unmarshal(data, &cfg)
+	if err != nil {
+		return nil, fmt.Errorf("invalid config: %w", err)
+	}
+
+	return &cfg, nil
+}
+
+func SaveMainConfig(cfg *protocol.MainConfig) error {
+
+	path := paths.MainConfig()
+
+	data, err := json.MarshalIndent(cfg, "", "    ")
+	if err != nil {
+		return err
+	}
+
+	return os.WriteFile(path, data, 0644)
+}

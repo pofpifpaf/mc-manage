@@ -3,6 +3,9 @@ package daemon
 import (
 	"fmt"
 	"minecraft-manager/internal/client"
+	"minecraft-manager/internal/config"
+	"minecraft-manager/internal/paths"
+	"minecraft-manager/internal/templates"
 	"minecraft-manager/internal/ui"
 	"os"
 	"os/signal"
@@ -53,6 +56,10 @@ func (d *Daemon) Run() error {
 		}
 	}
 
+	if err := d.handleMainConfig(); err != nil {
+		return err
+	}
+
 	ui.PrintSuccess(fmt.Sprintf("Minecraft manager daemon started, PID: %d", os.Getpid()))
 
 	// Wait for shutdown signals
@@ -76,16 +83,48 @@ func (d *Daemon) Run() error {
 	return nil
 }
 
+func (d *Daemon) handleMainConfig() error {
+
+	ui.PrintInfo("Loading main config file")
+	cfg, err := config.LoadMainConfig()
+	if err != nil {
+
+		ui.PrintWarning(fmt.Sprintf("Unable to load main config at %s, creating sample one", paths.GetServerRoot()))
+
+		if err := templates.CreateMainConfigJsonFile(); err != nil {
+			return err
+		}
+
+		cfg, err = config.LoadMainConfig()
+		if err != nil {
+			return err
+		}
+
+		cfg.ServerFilePath = paths.GetServerRoot()
+
+		if err := config.SaveMainConfig(cfg); err != nil {
+			return err
+		}
+	}
+
+	d.manager.config = cfg
+
+	return nil
+}
+
 func (d *Daemon) gracefulShutdown() error {
 
 	if d.manager.ServerCount() == 0 {
 		return nil
 	}
 
-	ui.PrintInfo(fmt.Sprintf("Found %d server(s) running, attempting to stop...", d.manager.ServerCount()))
+	var gracePeriod time.Duration
+	gracePeriod = time.Duration(d.manager.config.GracePeriodSeconds) * time.Second
+
+	ui.PrintInfo(fmt.Sprintf("Found %d server(s) running, grace period is %s, attempting to stop...", d.manager.ServerCount(), gracePeriod))
 	d.manager.StopAllServers()
 
-	timeout := time.After(d.manager.gracePeriodSeconds)
+	timeout := time.After(gracePeriod)
 	ticker := time.NewTicker(10 * time.Millisecond)
 	defer ticker.Stop()
 
@@ -96,7 +135,7 @@ func (d *Daemon) gracefulShutdown() error {
 
 		select {
 		case <-timeout:
-			ui.PrintError(fmt.Sprintf("Timeout of %s elapsed, killing remaining servers", d.manager.gracePeriodSeconds))
+			ui.PrintError(fmt.Sprintf("Grace period timeout (%s), killing remaining servers", gracePeriod))
 			d.manager.KillAllServers()
 		case <-ticker.C:
 		}

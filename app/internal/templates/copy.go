@@ -56,3 +56,17 @@ func CreateConfigJsonFile(destination string) error {
 
 	return os.WriteFile(dst, data, 0644)
 }
+
+func CreateMainConfigJsonFile() error {
+
+	dst := paths.MainConfig()
+
+	ui.PrintInfo("Creating main config file for destination " + dst)
+
+	data, err := Files.ReadFile(paths.Templates(paths.MainConfigJson))
+	if err != nil {
+		return err
+	}
+
+	return os.WriteFile(dst, data, 0644)
+}

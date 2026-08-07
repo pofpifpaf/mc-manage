@@ -82,7 +82,7 @@ func MakeList() ([]protocol.ServerInfo, error) {
 
 	var result []protocol.ServerInfo
 
-	err := filepath.WalkDir(paths.ServerRoot, func(path string, d fs.DirEntry, err error) error {
+	err := filepath.WalkDir(paths.GetServerRoot(), func(path string, d fs.DirEntry, err error) error {
 		if err != nil {
 			return err
 		}
@@ -349,7 +349,7 @@ func SetGracePeriod(period string) error {
 		Command: "SET",
 		Server:  "name",
 		Text:    "graceperiod",
-		Data:    periodDuration,
+		Data:    periodInt,
 	})
 	if err != nil {
 		return err

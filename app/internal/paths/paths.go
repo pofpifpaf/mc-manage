@@ -5,24 +5,38 @@ import (
 	"path/filepath"
 )
 
+var serverRoot = "/servers"
+
 const (
-	ServerRoot       = "/servers"
 	JavaRoot         = "/opt/java"
 	SocketPath       = "/run/minecraft-manager.sock"
 	Logs             = "logs/latest.log"
 	ScreenSocketPath = "/run/minecraft-manager-screen.sock"
 	ConfigJson       = "config.json"
+	MainConfigJson   = "main-cfg.json"
 	TemplatesDir     = "templates"
 	ServProperties   = "server.properties"
 	EulaTxt          = "eula.txt"
 )
 
+func GetServerRoot() string {
+	return serverRoot
+}
+
+func SetServerRoot(newRoot string) {
+	serverRoot = newRoot
+}
+
 func Server(name string) string {
-	return filepath.Join(ServerRoot, name)
+	return filepath.Join(serverRoot, name)
 }
 
 func Config(name string) string {
 	return filepath.Join(Server(name), ConfigJson)
+}
+
+func MainConfig() string {
+	return filepath.Join(serverRoot, MainConfigJson)
 }
 
 func ServerProperties(name string) string {

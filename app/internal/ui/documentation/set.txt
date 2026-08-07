@@ -4,18 +4,29 @@ This is the help for the manager set command. Use "manager help" for the standar
 Usage: manager set [server-name] [parameter] [argument]
 
 The different parameters are:
-    port <int>          sets the port number in the server.properties file of the specified server. Must be between 0 and 65535
+    port <int>
+            sets the port number in the server.properties file of the specified server. Must be between 0 and 65535
     
     autorestart <true/false>
-                        sets the ability of the server to restart automatically in case of an exit. Only "true" and "false" are accepted.
+            sets the ability of the server to restart automatically in case of an exit. Only "true" and "false" are accepted.
     
-    boot <true/false>   sets the ability of the server to start automatically when the daemon starts. Only "true" and "false" are accepted.
-    motd <string>       sets the MOTD of the server
-    version <string>    sets the version of the server. Attempts to download the appropriate jar.
-    java <string>       sets the java version to use for the specified server. Possible values are 8/16/21.
-    world <string>      sets the world name to use for the minecraft server.
+    boot <true/false>
+            sets the ability of the server to start automatically when the daemon starts. Only "true" and "false" are accepted.
+    
+    motd <string>
+            sets the MOTD of the server
+    
+    version <string>
+            sets the version of the server. Attempts to download the appropriate jar.
+    
+    java <string>
+            sets the java version to use for the specified server. Possible values are 8/16/21.
+    
+    world <string>
+            sets the world name to use for the minecraft server.
     
     mem-allocated, xms, mem-a <string>
-                        sets the allocated memory of the server
+            sets the allocated memory of the server
+    
     mem-max, xmx, mem-m <string>
-                        sets the maximum memory of the server
+            sets the maximum memory of the server

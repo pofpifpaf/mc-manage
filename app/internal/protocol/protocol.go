@@ -40,6 +40,11 @@ type Config struct {
 	AdditionalServArgs []string `json:"additionalservargs"`
 }
 
+type MainConfig struct {
+	ServerFilePath     string `json:"server-files-path"`
+	GracePeriodSeconds int    `json:"grace-period-seconds"`
+}
+
 type ServerState string
 
 const (

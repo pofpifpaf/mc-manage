@@ -33,9 +33,9 @@ type Server struct {
 }
 
 type Manager struct {
-	servers            map[string]*Server
-	gracePeriodSeconds time.Duration
-	mutex              sync.Mutex
+	servers map[string]*Server
+	mutex   sync.Mutex
+	config  *protocol.MainConfig
 }
 
 type ScreenClient struct {
@@ -44,8 +44,7 @@ type ScreenClient struct {
 
 func NewManager() *Manager {
 	return &Manager{
-		servers:            make(map[string]*Server),
-		gracePeriodSeconds: time.Duration(9 * time.Second),
+		servers: make(map[string]*Server),
 	}
 }
 
@@ -316,15 +315,36 @@ func (m *Manager) SetParameter(server string, paramType string, data any) error 
 
 	case "graceperiod":
 
-		m.gracePeriodSeconds = time.Duration(data.(float64))
+		if err := m.setGracePeriodCfg(data); err != nil {
+			return err
+		}
 
-		ui.PrintInfo(fmt.Sprintf("Grace Period is now set to %s", m.gracePeriodSeconds))
+		var periodDuration time.Duration
+		periodDuration = time.Duration(m.config.GracePeriodSeconds) * time.Second
+
+		ui.PrintInfo(fmt.Sprintf("Grace Period is now set to %s", periodDuration))
 
 	default:
 		return fmt.Errorf("Unknown parameter for SET %s", paramType)
 
 	}
 	return nil
+}
+
+func (m *Manager) setGracePeriodCfg(data any) error {
+	gracePeriod := int(data.(float64))
+
+	cfg, err := config.LoadMainConfig()
+	if err != nil {
+		return err
+	}
+
+	cfg.GracePeriodSeconds = gracePeriod
+
+	m.config = cfg
+
+	return config.SaveMainConfig(cfg)
+
 }
 
 func NewScreenClient(conn net.Conn) *ScreenClient {

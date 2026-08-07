@@ -6,6 +6,7 @@ import (
 	"minecraft-manager/internal/config"
 	"minecraft-manager/internal/create"
 	"minecraft-manager/internal/daemon"
+	"minecraft-manager/internal/paths"
 	"minecraft-manager/internal/templates"
 	"minecraft-manager/internal/ui"
 	"os"
@@ -24,17 +25,22 @@ func run() error {
 
 	case "start":
 		if len(os.Args) != 3 {
-			return fmt.Errorf("usage: manager start <server>")
+			return fmt.Errorf("usage: manager start [server]")
 		}
 		return client.StartServer(os.Args[2])
 
 	case "create":
 		if len(os.Args) != 5 {
-			return fmt.Errorf("usage: manager create <server> <type> <version>")
+			return fmt.Errorf("usage: manager create [server] [type] [version]>")
 		}
 		return create.Create(os.Args[2], os.Args[3], os.Args[4])
 
 	case "daemon":
+		if len(os.Args) == 3 {
+			paths.SetServerRoot(os.Args[2])
+		} else if len(os.Args) != 2 {
+			return fmt.Errorf("usage: manager daemon [server-root (optional)]")
+		}
 		d := daemon.New()
 		return d.Run()
 
