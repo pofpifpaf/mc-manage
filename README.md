@@ -7,7 +7,8 @@ It relies on a file-based system, scanning a server folder and starting, screeni
 GitHub page: https://github.com/pofpifpaf/mc-manage
 
 Server types available in this version are :
- - vanilla
+ - Vanilla
+ - Paper
  
 ## Features
 

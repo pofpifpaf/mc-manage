@@ -28,6 +28,7 @@ type Config struct {
 	Name               string   `json:"name"`
 	Type               string   `json:"type"`
 	Version            string   `json:"version"`
+	VersionArg         string   `json:"versionArg"`
 	Java               string   `json:"java"`
 	MemoryAllocated    string   `json:"memoryAllocated"`
 	MemoryMax          string   `json:"memoryMax"`

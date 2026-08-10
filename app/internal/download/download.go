@@ -13,7 +13,12 @@ import (
 
 func RetrieveJarIfArchived(cfg *protocol.Config) (bool, error) {
 
-	jarArchivePath := filepath.Join(paths.Server(cfg.Name), cfg.Jar+"."+cfg.Version+".old")
+	var jarArchivePath string
+	if cfg.VersionArg == "" {
+		jarArchivePath = filepath.Join(paths.Server(cfg.Name), cfg.Jar+"."+cfg.Version+".old")
+	} else {
+		jarArchivePath = filepath.Join(paths.Server(cfg.Name), cfg.Jar+"."+cfg.Version+"-"+cfg.VersionArg+".old")
+	}
 
 	if _, err := os.Stat(jarArchivePath); err == nil {
 		if err := os.Rename(jarArchivePath, paths.Jar(cfg.Name, cfg.Jar)); err != nil {
@@ -35,8 +40,11 @@ func DownloadJar(cfg *protocol.Config) error {
 
 	switch cfg.Type {
 	case "vanilla":
-		err = DownloadVanilla(cfg.Version, paths.Jar(cfg.Name, cfg.Jar))
-		if err != nil {
+		if err := DownloadVanilla(cfg.Version, paths.Jar(cfg.Name, cfg.Jar)); err != nil {
+			return err
+		}
+	case "paper":
+		if err := DownloadPaper(cfg.Version, cfg.VersionArg, paths.Jar(cfg.Name, cfg.Jar)); err != nil {
 			return err
 		}
 	default:
@@ -76,7 +84,12 @@ func DownloadCustomJar(cfg *protocol.Config, downloadURL string) error {
 func ArchiveJarFile(cfg *protocol.Config) error {
 
 	oldPath := paths.Jar(cfg.Name, cfg.Jar)
-	newPath := filepath.Join(paths.Server(cfg.Name), cfg.Jar+"."+cfg.Version+".old")
+	var newPath string
+	if cfg.VersionArg == "" {
+		newPath = filepath.Join(paths.Server(cfg.Name), cfg.Jar+"."+cfg.Version+".old")
+	} else {
+		newPath = filepath.Join(paths.Server(cfg.Name), cfg.Jar+"."+cfg.Version+"-"+cfg.VersionArg+".old")
+	}
 
 	if err := os.Rename(oldPath, newPath); err != nil {
 		return err

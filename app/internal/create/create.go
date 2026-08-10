@@ -11,7 +11,22 @@ import (
 	"os"
 )
 
-func Create(name, serverType, version string) error {
+func Create(args []string) error {
+
+	var name, serverType, version, versionArg string
+
+	name = os.Args[2]
+	serverType = os.Args[3]
+	version = os.Args[4]
+
+	switch len(os.Args) {
+	case 5:
+		versionArg = ""
+	case 6:
+		versionArg = os.Args[5]
+	default:
+		return fmt.Errorf("Invalid number of arguments: %d", len(os.Args))
+	}
 
 	fmt.Print("\n")
 	defer fmt.Print("\n")
@@ -44,6 +59,7 @@ func Create(name, serverType, version string) error {
 	cfg.Name = name
 	cfg.Version = version
 	cfg.Type = serverType
+	cfg.VersionArg = versionArg
 
 	ui.PrintInfo("Saving config file with default config")
 	if err := config.Save(name, cfg); err != nil {
@@ -51,7 +67,8 @@ func Create(name, serverType, version string) error {
 	}
 
 	if err := download.DownloadJar(cfg); err != nil {
-		return err
+		ui.PrintWarning("Unable to download jar, use \"manager set <server> version\"  to retry jar download")
+		ui.PrintWarning("Error downloading jar: " + err.Error())
 	}
 
 	ui.PrintSuccess("Created server \"" + name + "\"")
@@ -59,7 +76,22 @@ func Create(name, serverType, version string) error {
 	return nil
 }
 
-func ImportServer(name, serverType, version string) error {
+func ImportServer(args []string) error {
+
+	var name, serverType, version, versionArg string
+
+	name = os.Args[2]
+	serverType = os.Args[3]
+	version = os.Args[4]
+
+	switch len(os.Args) {
+	case 5:
+		versionArg = ""
+	case 6:
+		versionArg = os.Args[5]
+	default:
+		return fmt.Errorf("Invalid number of arguments: %d", len(os.Args))
+	}
 
 	fmt.Print("\n")
 	defer fmt.Print("\n")
@@ -91,6 +123,7 @@ func ImportServer(name, serverType, version string) error {
 	cfg.Name = name
 	cfg.Type = serverType
 	cfg.Version = version
+	cfg.VersionArg = versionArg
 
 	serverPropertiesPath := paths.ServerProperties(name)
 	if _, err := os.Stat(serverPropertiesPath); err == nil {

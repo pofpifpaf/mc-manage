@@ -9,16 +9,16 @@ import (
 	"os"
 )
 
-type versionManifest struct {
-	Versions []manifestVersion `json:"versions"`
+type vanillaVersionManifest struct {
+	Versions []vanillaManifestVersion `json:"versions"`
 }
 
-type manifestVersion struct {
+type vanillaManifestVersion struct {
 	ID  string `json:"id"`
 	URL string `json:"url"`
 }
 
-type versionInfo struct {
+type vanillaVersionInfo struct {
 	Downloads struct {
 		Server struct {
 			URL  string `json:"url"`
@@ -27,10 +27,10 @@ type versionInfo struct {
 	} `json:"downloads"`
 }
 
-const manifestURL = "https://piston-meta.mojang.com/mc/game/version_manifest_v2.json"
+const vanillaManifestURL = "https://piston-meta.mojang.com/mc/game/version_manifest_v2.json"
 
-func manifest() (*versionManifest, error) {
-	resp, err := http.Get(manifestURL)
+func vanillaManifest() (*vanillaVersionManifest, error) {
+	resp, err := http.Get(vanillaManifestURL)
 	if err != nil {
 		return nil, err
 	}
@@ -40,7 +40,7 @@ func manifest() (*versionManifest, error) {
 		return nil, fmt.Errorf("unexpected status %s", resp.Status)
 	}
 
-	var m versionManifest
+	var m vanillaVersionManifest
 
 	if err := json.NewDecoder(resp.Body).Decode(&m); err != nil {
 		return nil, err
@@ -49,8 +49,8 @@ func manifest() (*versionManifest, error) {
 	return &m, nil
 }
 
-func versionMetadataURL(version string) (string, error) {
-	m, err := manifest()
+func vanillaVersionMetadataURL(version string) (string, error) {
+	m, err := vanillaManifest()
 	if err != nil {
 		return "", err
 	}
@@ -68,7 +68,7 @@ func DownloadVanilla(version, destination string) error {
 
 	ui.PrintInfo(fmt.Sprintf("Downloading %q for version %q", destination, version))
 
-	metadataURL, err := versionMetadataURL(version)
+	metadataURL, err := vanillaVersionMetadataURL(version)
 	if err != nil {
 		return err
 	}
@@ -83,7 +83,7 @@ func DownloadVanilla(version, destination string) error {
 		return fmt.Errorf("unexpected status %s", resp.Status)
 	}
 
-	var info versionInfo
+	var info vanillaVersionInfo
 
 	if err := json.NewDecoder(resp.Body).Decode(&info); err != nil {
 		return err

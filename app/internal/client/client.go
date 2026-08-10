@@ -118,7 +118,23 @@ func MakeList() ([]protocol.ServerInfo, error) {
 	return result, nil
 }
 
-func SetParameter(server, arg1, arg2 string) error {
+func SetParameter(args []string) error {
+
+	var server, arg1, arg2, arg3 string
+	switch len(os.Args) {
+	case 5:
+		server = os.Args[2]
+		arg1 = os.Args[3]
+		arg2 = os.Args[4]
+		arg3 = ""
+	case 6:
+		server = os.Args[2]
+		arg1 = os.Args[3]
+		arg2 = os.Args[4]
+		arg3 = os.Args[5]
+	default:
+		return fmt.Errorf("Invalid number of arguments: %d", len(os.Args))
+	}
 
 	fmt.Print("\n")
 	defer fmt.Print("\n")
@@ -158,7 +174,7 @@ func SetParameter(server, arg1, arg2 string) error {
 
 	case "version":
 
-		if err := setServerVersion(server, arg2); err != nil {
+		if err := setServerVersion(server, arg2, arg3); err != nil {
 			return err
 		}
 
@@ -249,7 +265,7 @@ func setServerAutoRestart(name, autoRestart string) error {
 	}
 }
 
-func setServerVersion(name, serverVersion string) error {
+func setServerVersion(name, serverVersion, serverVersionArg string) error {
 
 	cfg, err := config.Load(name)
 	if err != nil {
@@ -257,8 +273,9 @@ func setServerVersion(name, serverVersion string) error {
 	}
 
 	oldServerVersion := cfg.Version
+	oldServerVersionArg := cfg.VersionArg
 
-	if cfg.Version == serverVersion {
+	if cfg.Version == serverVersion && cfg.VersionArg == serverVersionArg {
 		return fmt.Errorf("Version for server %s is already %s", name, serverVersion)
 	}
 
@@ -267,10 +284,12 @@ func setServerVersion(name, serverVersion string) error {
 	}
 
 	cfg.Version = serverVersion
+	cfg.VersionArg = serverVersionArg
 
 	if err := download.DownloadJar(cfg); err != nil {
-		ui.PrintError("Unable to find version \"" + serverVersion + "\", undoing changes...")
+		ui.PrintError("Unable to find version \"" + serverVersion + "\", undoing version changes...")
 		cfg.Version = oldServerVersion
+		cfg.VersionArg = oldServerVersionArg
 		download.RetrieveJarIfArchived(cfg)
 		return err
 	}
@@ -337,6 +356,10 @@ func setMaxMemory(server, mem string) error {
 }
 
 func SetGracePeriod(period string) error {
+
+	fmt.Print("\n")
+	defer fmt.Print("\n")
+
 	periodInt, err := strconv.Atoi(period)
 	if err != nil || (periodInt < 0 || periodInt > 360) {
 		return fmt.Errorf("grace period out of range, must be between 0 and 360")
@@ -413,14 +436,10 @@ func InspectServer(name string) error {
 
 func KillServer(name string) error {
 
-	if err := send(protocol.Request{
+	return send(protocol.Request{
 		Command: "KILL",
 		Server:  name,
-	}); err != nil {
-		return err
-	}
-
-	return nil
+	})
 }
 
 func getActivePlayerInformation(server protocol.ServerInfo) (protocol.ServerInfo, error) {

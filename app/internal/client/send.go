@@ -3,6 +3,7 @@ package client
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"minecraft-manager/internal/paths"
 	"minecraft-manager/internal/protocol"
 	"minecraft-manager/internal/ui"
@@ -31,6 +32,9 @@ func sendProtocol(req protocol.Request) (protocol.Response, error) {
 }
 
 func send(req protocol.Request) error {
+
+	fmt.Print("\n")
+	defer fmt.Print("\n")
 
 	resp, err := sendProtocol(req)
 	if err != nil {

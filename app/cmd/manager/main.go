@@ -30,10 +30,10 @@ func run() error {
 		return client.StartServer(os.Args[2])
 
 	case "create":
-		if len(os.Args) != 5 {
+		if len(os.Args) < 5 {
 			return fmt.Errorf("usage: manager create [server] [type] [version]>")
 		}
-		return create.Create(os.Args[2], os.Args[3], os.Args[4])
+		return create.Create(os.Args)
 
 	case "daemon":
 		if len(os.Args) == 3 {
@@ -72,13 +72,13 @@ func run() error {
 		return client.KillServer(os.Args[2])
 
 	case "set":
-		if len(os.Args) != 5 {
+		if len(os.Args) < 5 {
 			if len(os.Args) == 3 && os.Args[2] == "help" {
 				return ui.PrintSetHelpMessage()
 			}
 			return fmt.Errorf("usage: manager set <server> <parameter> <argument>")
 		}
-		return client.SetParameter(os.Args[2], os.Args[3], os.Args[4])
+		return client.SetParameter(os.Args)
 
 	case "set-property":
 		if len(os.Args) != 5 {
@@ -93,10 +93,10 @@ func run() error {
 		return client.DownloadJarToServer(os.Args[2], os.Args[3])
 
 	case "import":
-		if len(os.Args) != 5 {
+		if len(os.Args) < 5 {
 			return fmt.Errorf("usage: manager import <server> <type> <version>")
 		}
-		return create.ImportServer(os.Args[2], os.Args[3], os.Args[4])
+		return create.ImportServer(os.Args)
 
 	case "add-launch-arg", "ala":
 

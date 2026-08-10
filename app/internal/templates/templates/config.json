@@ -3,6 +3,7 @@
     "java": "21",
     "type": "vanilla",
     "version": "1.16.5",
+    "versionArg": "",
     "memoryAllocated": "512M",
     "memoryMax": "4G",
     "jar": "server.jar",
