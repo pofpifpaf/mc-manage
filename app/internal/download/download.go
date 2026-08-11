@@ -47,6 +47,10 @@ func DownloadJar(cfg *protocol.Config) error {
 		if err := DownloadPaper(cfg.Version, cfg.VersionArg, paths.Jar(cfg.Name, cfg.Jar)); err != nil {
 			return err
 		}
+	case "neoforge":
+		if err := InstallNeoforge(cfg); err != nil {
+			return err
+		}
 	default:
 		ui.PrintError("\"" + cfg.Type + "\" Unsupported type")
 	}
