@@ -3,7 +3,6 @@ package client
 import (
 	"errors"
 	"fmt"
-	"io/fs"
 	"minecraft-manager/internal/config"
 	"minecraft-manager/internal/download"
 	"minecraft-manager/internal/java"
@@ -11,7 +10,6 @@ import (
 	"minecraft-manager/internal/protocol"
 	"minecraft-manager/internal/ui"
 	"os"
-	"path/filepath"
 	"strconv"
 	"time"
 )
@@ -80,39 +78,40 @@ func daemonIsServerRunning(name string) (protocol.ServerState, error) {
 
 func MakeList() ([]protocol.ServerInfo, error) {
 
-	var result []protocol.ServerInfo
-
-	err := filepath.WalkDir(paths.GetServerRoot(), func(path string, d fs.DirEntry, err error) error {
-		if err != nil {
-			return err
-		}
-
-		if d.IsDir() {
-			if _, err := os.Stat(paths.Config(d.Name())); err == nil {
-
-				isServerRunning, _ := daemonIsServerRunning(d.Name())
-
-				cfg, err := config.Load(d.Name())
-				if err == nil {
-					server := protocol.ServerInfo{
-						Name:              d.Name(),
-						Port:              cfg.Port,
-						AutomaticRestarts: cfg.AutomaticRestarts,
-						Running:           isServerRunning,
-						Version:           cfg.Version,
-						JavaVersion:       cfg.Java,
-						StartOnBoot:       cfg.StartOnBoot,
-					}
-					result = append(result, server)
-				}
-
-			}
-		}
-
-		return nil
-	})
+	entries, err := os.ReadDir(paths.GetServerRoot())
 	if err != nil {
 		return nil, err
+	}
+
+	var result []protocol.ServerInfo
+
+	for _, d := range entries {
+		if !d.IsDir() {
+			continue
+		}
+
+		name := d.Name()
+
+		if _, err := os.Stat(paths.Config(name)); err != nil {
+			continue
+		}
+
+		isServerRunning, _ := daemonIsServerRunning(name)
+
+		cfg, err := config.Load(name)
+		if err != nil {
+			continue
+		}
+
+		result = append(result, protocol.ServerInfo{
+			Name:              name,
+			Port:              cfg.Port,
+			AutomaticRestarts: cfg.AutomaticRestarts,
+			Running:           isServerRunning,
+			Version:           cfg.Version,
+			JavaVersion:       cfg.Java,
+			StartOnBoot:       cfg.StartOnBoot,
+		})
 	}
 
 	return result, nil
