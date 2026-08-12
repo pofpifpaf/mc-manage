@@ -138,11 +138,13 @@ func neoforgeRunInstaller(server string) error {
 
 	if err != nil {
 		ui.PrintError(fmt.Sprintf("Installer exited with error: %v", err))
-	} else {
-		ui.PrintSuccess("Installer exited normally")
 	}
+	ui.PrintSuccess("Installer exited normally")
 
-	return nil
+	cfg.Jar = "run.sh"
+	cfg.AdditionalServArgs = append(cfg.AdditionalServArgs, "nogui")
+
+	return config.Save(server, cfg)
 }
 
 func InstallNeoforge(cfg *protocol.Config) error {
@@ -154,5 +156,9 @@ func InstallNeoforge(cfg *protocol.Config) error {
 		return err
 	}
 
-	return neoforgeRunInstaller(cfg.Name)
+	if err := neoforgeRunInstaller(cfg.Name); err != nil {
+		return err
+	}
+
+	return config.NeoforgeConfigureJavaRunScript(cfg.Name)
 }

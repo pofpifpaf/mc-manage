@@ -3,6 +3,7 @@ package download
 import (
 	"fmt"
 	"io"
+	"minecraft-manager/internal/config"
 	"minecraft-manager/internal/paths"
 	"minecraft-manager/internal/protocol"
 	"minecraft-manager/internal/ui"
@@ -82,7 +83,16 @@ func DownloadCustomJar(cfg *protocol.Config, downloadURL string) error {
 
 	_, err = io.Copy(out, resp.Body)
 
-	return nil
+	switch cfg.Type {
+	case "neoforge":
+		if err := neoforgeRunInstaller(cfg.Name); err != nil {
+			return err
+		}
+
+		return config.NeoforgeConfigureJavaRunScript(cfg.Name)
+	default:
+		return nil
+	}
 }
 
 func ArchiveJarFile(cfg *protocol.Config) error {
