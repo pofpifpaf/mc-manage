@@ -308,7 +308,16 @@ func setJavaVersion(name, javaVersion string) error {
 
 	cfg.Java = javaVersion
 
-	return config.Save(cfg.Name, cfg)
+	if err := config.Save(cfg.Name, cfg); err != nil {
+		return err
+	}
+
+	switch cfg.Type {
+	case "neoforge":
+		return config.NeoforgeConfigureJavaRunScript(name)
+	default:
+		return nil
+	}
 }
 
 func setWorldName(name, worldName string) error {
@@ -335,7 +344,16 @@ func setAllocatedMemory(server, mem string) error {
 
 	cfg.MemoryAllocated = mem
 
-	return config.Save(server, cfg)
+	if err := config.Save(server, cfg); err != nil {
+		return err
+	}
+
+	switch cfg.Type {
+	case "neoforge":
+		return config.NeoforgeSetJVMMemoryArgs(server)
+	default:
+		return nil
+	}
 }
 
 func setMaxMemory(server, mem string) error {
@@ -351,7 +369,16 @@ func setMaxMemory(server, mem string) error {
 
 	cfg.MemoryMax = mem
 
-	return config.Save(server, cfg)
+	if err := config.Save(server, cfg); err != nil {
+		return err
+	}
+
+	switch cfg.Type {
+	case "neoforge":
+		return config.NeoforgeSetJVMMemoryArgs(server)
+	default:
+		return nil
+	}
 }
 
 func SetGracePeriod(period string) error {

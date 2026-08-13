@@ -3,6 +3,7 @@ package download
 import (
 	"fmt"
 	"io"
+	"minecraft-manager/internal/config"
 	"minecraft-manager/internal/paths"
 	"minecraft-manager/internal/protocol"
 	"minecraft-manager/internal/ui"
@@ -47,6 +48,10 @@ func DownloadJar(cfg *protocol.Config) error {
 		if err := DownloadPaper(cfg.Version, cfg.VersionArg, paths.Jar(cfg.Name, cfg.Jar)); err != nil {
 			return err
 		}
+	case "neoforge":
+		if err := InstallNeoforge(cfg); err != nil {
+			return err
+		}
 	default:
 		ui.PrintError("\"" + cfg.Type + "\" Unsupported type")
 	}
@@ -78,7 +83,16 @@ func DownloadCustomJar(cfg *protocol.Config, downloadURL string) error {
 
 	_, err = io.Copy(out, resp.Body)
 
-	return nil
+	switch cfg.Type {
+	case "neoforge":
+		if err := neoforgeRunInstaller(cfg.Name); err != nil {
+			return err
+		}
+
+		return config.NeoforgeConfigureJavaRunScript(cfg.Name)
+	default:
+		return nil
+	}
 }
 
 func ArchiveJarFile(cfg *protocol.Config) error {

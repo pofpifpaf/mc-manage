@@ -67,7 +67,7 @@ func Create(args []string) error {
 	}
 
 	if err := download.DownloadJar(cfg); err != nil {
-		ui.PrintWarning("Unable to download jar, use \"manager set <server> version\"  to retry jar download")
+		ui.PrintWarning("Unable to download jar, use \"manager set <server> version\" to retry jar download")
 		ui.PrintWarning("Error downloading jar: " + err.Error())
 	}
 
@@ -145,6 +145,10 @@ func ImportServer(args []string) error {
 
 	if err := config.Save(cfg.Name, cfg); err != nil {
 		return err
+	}
+
+	if err := config.NeoforgeGetJVMArgs(name); err != nil {
+		ui.PrintError("could not retrieve jvm memory arguments")
 	}
 
 	if err := download.DownloadJar(cfg); err != nil {
