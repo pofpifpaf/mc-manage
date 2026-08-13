@@ -2,6 +2,7 @@ package download
 
 import (
 	"bufio"
+	"encoding/xml"
 	"fmt"
 	"io"
 	"minecraft-manager/internal/config"
@@ -12,10 +13,82 @@ import (
 	"net/http"
 	"os"
 	"os/exec"
+	"sort"
+	"strconv"
 	"strings"
 
 	"golang.org/x/term"
 )
+
+type NeoforgeMetadata struct {
+	Versioning struct {
+		Latest   string `xml:"latest"`
+		Versions struct {
+			Version []string `xml:"version"`
+		} `xml:"versions"`
+	} `xml:"versioning"`
+}
+
+func neoforgeDisplayAdjacentBuilds(build string) error {
+
+	releasesURL := "https://maven.neoforged.net/releases/net/neoforged/neoforge/maven-metadata.xml"
+
+	resp, err := http.Get(releasesURL)
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+
+	var metadata NeoforgeMetadata
+
+	if err := xml.NewDecoder(resp.Body).Decode(&metadata); err != nil {
+		return err
+	}
+
+	ui.PrintInfo("Latest available Neoforge version is " + metadata.Versioning.Latest)
+
+	parts := strings.Split(build, ".")
+	if len(parts) < 2 {
+		return fmt.Errorf("invalid NeoForge version: %s", build)
+	}
+
+	minecraftVersion := strings.Join(parts[:2], ".")
+
+	var builds []string
+
+	for _, version := range metadata.Versioning.Versions.Version {
+		if !strings.HasPrefix(version, minecraftVersion+".") {
+			continue
+		}
+
+		buildNumber := strings.TrimPrefix(version, minecraftVersion+".")
+
+		if _, err := strconv.Atoi(buildNumber); err != nil {
+			continue
+		}
+
+		builds = append(builds, version)
+	}
+
+	sort.Slice(builds, func(i, j int) bool {
+		a, _ := strconv.Atoi(strings.TrimPrefix(builds[i], minecraftVersion+"."))
+		b, _ := strconv.Atoi(strings.TrimPrefix(builds[j], minecraftVersion+"."))
+
+		return a > b
+	})
+
+	if len(builds) > 10 {
+		builds = builds[:10]
+	}
+
+	ui.PrintInfo(fmt.Sprintf("Latest 10 builds available for Minecraft %s:", minecraftVersion))
+
+	for _, version := range builds {
+		fmt.Printf("     %s\n", version)
+	}
+
+	return nil
+}
 
 func downloadNeoforgeInstaller(version, destination string) error {
 
@@ -33,6 +106,7 @@ func downloadNeoforgeInstaller(version, destination string) error {
 
 	if resp.StatusCode != http.StatusOK {
 		ui.PrintError("Could not get jar, is server version correct?")
+		neoforgeDisplayAdjacentBuilds(version)
 		return fmt.Errorf("unexpected status %s", resp.Status)
 	}
 
