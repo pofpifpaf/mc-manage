@@ -4,9 +4,11 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"minecraft-manager/internal/protocol"
 	"minecraft-manager/internal/ui"
 	"net/http"
 	"os"
+	"slices"
 	"strconv"
 	"text/tabwriter"
 )
@@ -49,6 +51,70 @@ func paperPrintAvailableVersions(builds []paperManifestBuildVersion) error {
 	}
 
 	fmt.Print("\n")
+
+	return nil
+}
+
+func paperSetRecommendedJVMArguments(cfg *protocol.Config) error {
+
+	ui.PrintInfo("Setting recommended jvm paper flags")
+
+	URL := "https://fill.papermc.io/v3/projects/paper/versions/" + cfg.Version
+	resp, err := http.Get(URL)
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		ui.PrintError("Unable to reach: Is version number correct?")
+		return fmt.Errorf("unexpected status %s", resp.Status)
+	}
+
+	var version protocol.PaperVersionManifest
+
+	if err := json.NewDecoder(resp.Body).Decode(&version); err != nil {
+		return err
+	}
+
+	cfg.Java = fmt.Sprintf("%d", version.Version.Java.Version.Minimum)
+
+	for _, arg := range version.Version.Java.Flags.Recommended {
+		cfg.AdditionalJVMArgs = append(cfg.AdditionalJVMArgs, arg)
+	}
+
+	return nil
+}
+
+func paperRemoveRecommendedJVMArguments(cfg *protocol.Config) error {
+	URL := "https://fill.papermc.io/v3/projects/paper/versions/" + cfg.Version
+	resp, err := http.Get(URL)
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		ui.PrintError("Unable to reach: Is version number correct?")
+		return fmt.Errorf("unexpected status %s", resp.Status)
+	}
+
+	var version protocol.PaperVersionManifest
+
+	if err := json.NewDecoder(resp.Body).Decode(&version); err != nil {
+		return err
+	}
+
+	args := cfg.AdditionalJVMArgs[:0]
+
+	for _, arg := range cfg.AdditionalJVMArgs {
+		if slices.Contains(version.Version.Java.Flags.Recommended, arg) {
+			continue
+		}
+		args = append(args, arg)
+	}
+
+	cfg.AdditionalJVMArgs = args
 
 	return nil
 }

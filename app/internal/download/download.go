@@ -12,6 +12,16 @@ import (
 	"path/filepath"
 )
 
+func RemoveRecommendedJVMArguments(cfg *protocol.Config) error {
+
+	switch cfg.Type {
+	case "paper":
+		return paperRemoveRecommendedJVMArguments(cfg)
+	}
+
+	return nil
+}
+
 func RetrieveJarIfArchived(cfg *protocol.Config) (bool, error) {
 
 	var jarArchivePath string
@@ -47,6 +57,9 @@ func DownloadJar(cfg *protocol.Config) error {
 	case "paper":
 		if err := DownloadPaper(cfg.Version, cfg.VersionArg, paths.Jar(cfg.Name, cfg.Jar)); err != nil {
 			return err
+		}
+		if err := paperSetRecommendedJVMArguments(cfg); err != nil {
+			ui.PrintWarning("could not set recommended jvm args: " + err.Error())
 		}
 	case "neoforge":
 		if err := InstallNeoforge(cfg); err != nil {

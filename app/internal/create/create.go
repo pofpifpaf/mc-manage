@@ -61,14 +61,13 @@ func Create(args []string) error {
 	cfg.Type = serverType
 	cfg.VersionArg = versionArg
 
-	ui.PrintInfo("Saving config file with default config")
-	if err := config.Save(name, cfg); err != nil {
-		return err
-	}
-
 	if err := download.DownloadJar(cfg); err != nil {
 		ui.PrintWarning("Unable to download jar, use \"manager set <server> version\" to retry jar download")
 		ui.PrintWarning("Error downloading jar: " + err.Error())
+	}
+
+	if err := config.Save(cfg.Name, cfg); err != nil {
+		return err
 	}
 
 	ui.PrintSuccess("Created server \"" + name + "\"")
@@ -147,12 +146,18 @@ func ImportServer(args []string) error {
 		return err
 	}
 
-	if err := config.NeoforgeGetJVMArgs(name); err != nil {
-		ui.PrintError("could not retrieve jvm memory arguments")
+	if cfg.Type == "neoforge" {
+		if err := config.NeoforgeGetJVMArgs(name); err != nil {
+			ui.PrintError("could not retrieve jvm memory arguments")
+		}
 	}
 
 	if err := download.DownloadJar(cfg); err != nil {
 		ui.PrintError("unable to download jar :" + err.Error())
+	}
+
+	if err := config.Save(cfg.Name, cfg); err != nil {
+		return err
 	}
 
 	if _, err := os.Stat(paths.Eula(name)); err != nil {

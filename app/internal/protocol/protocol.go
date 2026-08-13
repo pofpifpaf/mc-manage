@@ -78,3 +78,16 @@ const (
 	setParameterPort        = "port"
 	setParameterAutoRestart = "autorestart"
 )
+
+type PaperVersionManifest struct {
+	Version struct {
+		Java struct {
+			Version struct {
+				Minimum int `json:"minimum"`
+			} `json:"version"`
+			Flags struct {
+				Recommended []string `json:"recommended"`
+			} `json:"flags"`
+		} `json:"java"`
+	} `json:"version"`
+}

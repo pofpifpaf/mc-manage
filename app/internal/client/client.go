@@ -273,6 +273,7 @@ func setServerVersion(name, serverVersion, serverVersionArg string) error {
 
 	oldServerVersion := cfg.Version
 	oldServerVersionArg := cfg.VersionArg
+	oldJVMArg := cfg.AdditionalJVMArgs
 
 	if cfg.Version == serverVersion && cfg.VersionArg == serverVersionArg {
 		return fmt.Errorf("Version for server %s is already %s", name, serverVersion)
@@ -282,6 +283,10 @@ func setServerVersion(name, serverVersion, serverVersionArg string) error {
 		ui.PrintWarning("Unable to archive old jar file")
 	}
 
+	if err := download.RemoveRecommendedJVMArguments(cfg); err != nil {
+		ui.PrintWarning("Couldn't remove old recommended jvm arguments" + err.Error())
+	}
+
 	cfg.Version = serverVersion
 	cfg.VersionArg = serverVersionArg
 
@@ -289,6 +294,7 @@ func setServerVersion(name, serverVersion, serverVersionArg string) error {
 		ui.PrintError("Unable to find version \"" + serverVersion + "\", undoing version changes...")
 		cfg.Version = oldServerVersion
 		cfg.VersionArg = oldServerVersionArg
+		cfg.AdditionalJVMArgs = oldJVMArg
 		download.RetrieveJarIfArchived(cfg)
 		return err
 	}
