@@ -66,6 +66,10 @@ func DownloadJar(cfg *protocol.Config) error {
 		if err := paperSetRecommendedJVMArguments(cfg); err != nil {
 			ui.PrintWarning("could not set recommended jvm args: " + err.Error())
 		}
+	case "purpur":
+		if err := DownloadPurpur(cfg.Version, cfg.VersionArg, paths.Jar(cfg.Name, cfg.Jar)); err != nil {
+			return err
+		}
 	case "neoforge":
 		if err := InstallNeoforge(cfg); err != nil {
 			return err

@@ -111,8 +111,8 @@ func PrintServerList(servers []protocol.ServerInfo) {
 	w := tabwriter.NewWriter(os.Stdout, 0, 0, 2, ' ', 0)
 	defer w.Flush()
 
-	fmt.Fprintln(w, "NAME\tVERSION\tJAVA\tPORT\tAUTO RESTART\tSIZE\tBOOT\tSTATE")
-	fmt.Fprintln(w, "----\t-------\t----\t----\t------------\t----\t----\t-------")
+	fmt.Fprintln(w, "NAME\tTYPE\tVERSION\tJAVA\tPORT\tAUTO RESTART\tSIZE\tBOOT\tSTATE")
+	fmt.Fprintln(w, "----\t----\t-------\t----\t----\t------------\t----\t----\t-------")
 
 	for _, server := range servers {
 
@@ -120,8 +120,9 @@ func PrintServerList(servers []protocol.ServerInfo) {
 
 		fmt.Fprintf(
 			w,
-			"%s\t%s\t%s\t%s\t%t\t%s\t%t\t%s\n",
+			"%s\t%s\t%s\t%s\t%s\t%t\t%s\t%t\t%s\n",
 			server.Name,
+			server.Type,
 			server.Version,
 			server.JavaVersion,
 			server.Port,
@@ -156,6 +157,7 @@ func PrintInspectServer(server protocol.ServerInfo, cfg *protocol.Config) {
 
 	fmt.Fprintf(w, "Type\t%s\n", cfg.Type)
 	fmt.Fprintf(w, "Version\t%s\n", cfg.Version)
+	fmt.Fprintf(w, "Version Arg\t%s\n", cfg.VersionArg)
 	fmt.Fprintf(w, "Java Version\t%s\n", cfg.Java)
 	fmt.Fprintf(w, "Memory Allocated\t%s\n", cfg.MemoryAllocated)
 	fmt.Fprintf(w, "Memory Max\t%s\n", cfg.MemoryMax)

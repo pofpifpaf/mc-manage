@@ -7,13 +7,20 @@ The different server types are:
         Snapshots and pre-release versions are supported.
 
     paper
-        The build number can to be put in additional-args for create and import.
+        The build number can to be put in additional-args for create, set and import.
         Entering an incorrect build number will display the 10 latest available builds.
         No build number will grab the latest build. In this mode, only STABLE releases can be selected.
+        The recommended jvm arguments for each version is set automatically when downloading the jar. 
         Example : "manager create server-name paper 1.20.6 144" 
 
     neoforge
         The full version number (including the build) must be valid and put. 
         Entering an incorrect build number (such as 20.4.foo) will display the 10 latest available builds for that version (1.20.5 for this example)
         Example: "manager create server-name paper 20.4.250"
+
+    purpur
+        he build number can to be put in additional-args for create, set and import.
+        Entering an incorrect build number will display the 10 latest available builds.
+        No build number will grab the latest build. In this mode.
+        Example : "manager create server-name purpur 1.20.6 2186" 
 

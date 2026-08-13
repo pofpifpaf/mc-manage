@@ -105,6 +105,7 @@ func MakeList() ([]protocol.ServerInfo, error) {
 
 		result = append(result, protocol.ServerInfo{
 			Name:              name,
+			Type:              cfg.Type,
 			Port:              cfg.Port,
 			AutomaticRestarts: cfg.AutomaticRestarts,
 			Running:           isServerRunning,

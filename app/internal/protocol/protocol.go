@@ -56,6 +56,7 @@ const (
 
 type ServerInfo struct {
 	Name              string
+	Type              string
 	Port              string
 	AutomaticRestarts bool
 	StartedAt         time.Time
