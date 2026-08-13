@@ -351,7 +351,7 @@ func setAllocatedMemory(server, mem string) error {
 
 	switch cfg.Type {
 	case "neoforge":
-		return config.NeoforgeSetJVMArg(server)
+		return config.NeoforgeSetJVMMemoryArgs(server)
 	default:
 		return nil
 	}
@@ -376,7 +376,7 @@ func setMaxMemory(server, mem string) error {
 
 	switch cfg.Type {
 	case "neoforge":
-		return config.NeoforgeSetJVMArg(server)
+		return config.NeoforgeSetJVMMemoryArgs(server)
 	default:
 		return nil
 	}

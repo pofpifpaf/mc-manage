@@ -147,6 +147,10 @@ func ImportServer(args []string) error {
 		return err
 	}
 
+	if err := config.NeoforgeGetJVMArgs(name); err != nil {
+		ui.PrintError("could not retrieve jvm memory arguments")
+	}
+
 	if err := download.DownloadJar(cfg); err != nil {
 		ui.PrintError("unable to download jar :" + err.Error())
 	}

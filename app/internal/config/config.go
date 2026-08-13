@@ -89,6 +89,12 @@ func AddAdditionalJVMArg(server, arg string) error {
 
 	if err := updateAdditionalArgs(server, func(cfg *protocol.Config) error {
 
+		if cfg.Type == "neoforge" {
+			if err := NeoforgeAddJVMArg(server, arg); err != nil {
+				return err
+			}
+		}
+
 		cfg.AdditionalJVMArgs = addArg(cfg.AdditionalJVMArgs, arg)
 		return nil
 	}); err != nil {
@@ -115,16 +121,24 @@ func AddAdditionalServArg(server, arg string) error {
 
 func RemoveAdditionalJVMArg(server, argIndex string) error {
 
-	if err := updateAdditionalArgs(server, func(cfg *protocol.Config) error {
-		index, err := strconv.Atoi(argIndex)
-		if err != nil {
-			return err
-		}
+	index, err := strconv.Atoi(argIndex)
+	if err != nil {
+		return err
+	}
 
-		index--
+	index--
+
+	if err := updateAdditionalArgs(server, func(cfg *protocol.Config) error {
+
+		if cfg.Type == "neoforge" {
+			if err := NeoforgeRemoveJVMArg(server, cfg.AdditionalJVMArgs[index]); err != nil {
+				return err
+			}
+		}
 
 		cfg.AdditionalJVMArgs, err = removeAt(cfg.AdditionalJVMArgs, index)
 		return err
+
 	}); err != nil {
 		return err
 	}

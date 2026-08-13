@@ -1,8 +1,12 @@
 package config
 
 import (
+	"bufio"
+	"fmt"
 	"minecraft-manager/internal/paths"
+	"minecraft-manager/internal/ui"
 	"os"
+	"path/filepath"
 	"strings"
 )
 
@@ -33,8 +37,166 @@ func NeoforgeConfigureJavaRunScript(server string) error {
 	return nil
 }
 
-func NeoforgeSetJVMArg(server string) error {
-	_ = server // TODO: go into user_jvm_args.txt and add them there
+func NeoforgeSetJVMMemoryArgs(server string) error {
 
-	return nil
+	cfg, err := Load(server)
+	if err != nil {
+		return err
+	}
+
+	userArgsPath := filepath.Join(paths.Server(server), "user_jvm_args.txt")
+
+	file, err := os.Open(userArgsPath)
+	if err != nil {
+		return err
+	}
+	defer file.Close()
+
+	var lines []string
+	foundXmx := false
+	foundXms := false
+
+	scanner := bufio.NewScanner(file)
+	for scanner.Scan() {
+		line := scanner.Text()
+
+		if strings.HasPrefix(line, "#") || strings.TrimSpace(line) == "" {
+			lines = append(lines, line)
+			continue
+		}
+
+		if strings.HasPrefix(line, "-Xms") {
+			lines = append(lines, fmt.Sprintf("-Xms%s", cfg.MemoryAllocated))
+			foundXms = true
+		} else if strings.HasPrefix(line, "-Xmx") {
+			lines = append(lines, fmt.Sprintf("-Xmx%s", cfg.MemoryMax))
+			foundXmx = true
+		} else {
+			lines = append(lines, line)
+		}
+	}
+
+	if err := scanner.Err(); err != nil {
+		return err
+	}
+
+	if !foundXms {
+		lines = append(lines, fmt.Sprintf("-Xms%s", cfg.MemoryAllocated))
+	}
+	if !foundXmx {
+		lines = append(lines, fmt.Sprintf("-Xmx%s", cfg.MemoryMax))
+	}
+
+	output := strings.Join(lines, "\n")
+	return os.WriteFile(userArgsPath, []byte(output), 0644)
+}
+
+func NeoforgeGetJVMArgs(server string) error {
+
+	cfg, err := Load(server)
+	if err != nil {
+		return err
+	}
+
+	userArgsPath := filepath.Join(paths.Server(server), "user_jvm_args.txt")
+
+	file, err := os.Open(userArgsPath)
+	if err != nil {
+		return err
+	}
+	defer file.Close()
+
+	var lines []string
+	foundXmx := false
+	foundXms := false
+
+	scanner := bufio.NewScanner(file)
+	for scanner.Scan() {
+		line := scanner.Text()
+
+		if strings.HasPrefix(line, "#") || strings.TrimSpace(line) == "" {
+			lines = append(lines, line)
+			continue
+		}
+
+		if strings.HasPrefix(line, "-Xms") {
+			cfg.MemoryAllocated, _ = strings.CutPrefix(line, "-Xms")
+			foundXms = true
+		} else if strings.HasPrefix(line, "-Xmx") {
+			cfg.MemoryMax, _ = strings.CutPrefix(line, "-Xmx")
+			foundXmx = true
+		} else {
+			cfg.AdditionalJVMArgs = append(cfg.AdditionalJVMArgs, line)
+			lines = append(lines, line)
+		}
+	}
+
+	if err := scanner.Err(); err != nil {
+		return err
+	}
+
+	if !foundXms {
+		cfg.MemoryAllocated = ""
+	}
+	if !foundXmx {
+		cfg.MemoryMax = ""
+	}
+
+	return Save(server, cfg)
+}
+
+func NeoforgeAddJVMArg(server, arg string) error {
+
+	userArgsPath := filepath.Join(paths.Server(server), "user_jvm_args.txt")
+
+	data, err := os.ReadFile(userArgsPath)
+	if err != nil {
+		return err
+	}
+
+	output := string(data) + "\n" + arg + "\n"
+
+	return os.WriteFile(userArgsPath, []byte(output), 0644)
+}
+
+func NeoforgeRemoveJVMArg(server, arg string) error {
+
+	userArgsPath := filepath.Join(paths.Server(server), "user_jvm_args.txt")
+
+	file, err := os.Open(userArgsPath)
+	if err != nil {
+		return err
+	}
+	defer file.Close()
+
+	var lines []string
+	found := false
+
+	scanner := bufio.NewScanner(file)
+	for scanner.Scan() {
+		line := scanner.Text()
+
+		if strings.HasPrefix(line, "#") || strings.TrimSpace(line) == "" {
+			lines = append(lines, line)
+			continue
+		}
+
+		if strings.EqualFold(line, arg) {
+			ui.PrintInfo("Removing argument " + arg + " from " + userArgsPath)
+			found = true
+		} else {
+			lines = append(lines, line)
+		}
+	}
+
+	if err := scanner.Err(); err != nil {
+		return err
+	}
+
+	if !found {
+		return fmt.Errorf("could not find argument %s", arg)
+	}
+
+	output := strings.Join(lines, "\n")
+	return os.WriteFile(userArgsPath, []byte(output), 0644)
 }

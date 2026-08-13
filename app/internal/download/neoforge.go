@@ -141,8 +141,11 @@ func neoforgeRunInstaller(server string) error {
 	}
 	ui.PrintSuccess("Installer exited normally")
 
-	cfg.Jar = "run.sh"
 	cfg.AdditionalServArgs = append(cfg.AdditionalServArgs, "nogui")
+
+	if err := config.NeoforgeSetJVMMemoryArgs(server); err != nil {
+		ui.PrintWarning("could not set memory arguments : " + err.Error())
+	}
 
 	return config.Save(server, cfg)
 }
