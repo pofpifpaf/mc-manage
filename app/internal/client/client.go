@@ -132,6 +132,11 @@ func SetParameter(args []string) error {
 		arg1 = os.Args[3]
 		arg2 = os.Args[4]
 		arg3 = os.Args[5]
+	case 7:
+		server = os.Args[2]
+		arg1 = os.Args[3]
+		arg2 = os.Args[4]
+		arg3 = os.Args[5] + "-" + os.Args[6]
 	default:
 		return fmt.Errorf("Invalid number of arguments: %d", len(os.Args))
 	}

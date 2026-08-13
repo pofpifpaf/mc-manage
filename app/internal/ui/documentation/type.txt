@@ -7,7 +7,8 @@ The different server types are:
         Snapshots and pre-release versions are supported.
 
     paper
-        The build number can to be put in additional-args for create, set and import.
+        additional-args = build number
+        
         Entering an incorrect build number will display the 10 latest available builds.
         No build number will grab the latest build. In this mode, only STABLE releases can be selected.
         The recommended jvm arguments for each version is set automatically when downloading the jar. 
@@ -15,12 +16,27 @@ The different server types are:
 
     neoforge
         The full version number (including the build) must be valid and put. 
-        Entering an incorrect build number (such as 20.4.foo) will display the 10 latest available builds for that version (1.20.5 for this example)
+        Entering an incorrect build number (such as 20.4.foo) will display the 10 latest available builds for that version (1.20.4 in this example)
         Example: "manager create server-name paper 20.4.250"
 
     purpur
-        he build number can to be put in additional-args for create, set and import.
+        additional-args = build number
+
+        The build number can to be put in additional-args for create, set and import.
         Entering an incorrect build number will display the 10 latest available builds.
         No build number will grab the latest build. In this mode.
-        Example : "manager create server-name purpur 1.20.6 2186" 
+        Examples : 
+            "manager create server-name purpur 1.20.6 2186"
+            "manager set server-name version 1.20.6" 
+
+    fabric
+        additional-args = loader version
+
+        Entering an incorrect loader version will display the 10 latest available loaders compatible with the version cited. Likewise for installers.
+        No build additional argument will grab the latest stable compatible build.
+        Examples: 
+                "manager create server-name fabric 1.21.6"
+                "manager create server-name fabric 1.21.6 0.14.22"
+                "manager create server-name fabric 1.21.6 0.14.22 1.1.2" 
+
 

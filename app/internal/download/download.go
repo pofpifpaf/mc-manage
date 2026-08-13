@@ -74,6 +74,10 @@ func DownloadJar(cfg *protocol.Config) error {
 		if err := InstallNeoforge(cfg); err != nil {
 			return err
 		}
+	case "fabric":
+		if err := DownloadFabric(cfg.Version, cfg.VersionArg, paths.Jar(cfg.Name, cfg.Jar)); err != nil {
+			return err
+		}
 	default:
 		ui.PrintError("\"" + cfg.Type + "\" Unsupported type")
 	}

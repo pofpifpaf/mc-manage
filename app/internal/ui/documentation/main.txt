@@ -68,5 +68,6 @@ Usage: manager [options...]
     rem-launch-arg, rla [jvm/serv] [server-name] [index]
             removes the jvm/server argument at index "index". Indexes start at one. A list of configured additional arguments along with their indexes are visible with "manager inspect"
 
-    help, --help, ?, -?     
-            shows this help message.
+    help, --help, ?, -? [type]     
+            shows this help message. Type shows the help message associated with the different server types supported.
+

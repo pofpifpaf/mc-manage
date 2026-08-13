@@ -24,6 +24,8 @@ func Create(args []string) error {
 		versionArg = ""
 	case 6:
 		versionArg = os.Args[5]
+	case 7:
+		versionArg = os.Args[5] + "-" + os.Args[6]
 	default:
 		return fmt.Errorf("Invalid number of arguments: %d", len(os.Args))
 	}
@@ -88,6 +90,8 @@ func ImportServer(args []string) error {
 		versionArg = ""
 	case 6:
 		versionArg = os.Args[5]
+	case 7:
+		versionArg = os.Args[5] + "-" + os.Args[6]
 	default:
 		return fmt.Errorf("Invalid number of arguments: %d", len(os.Args))
 	}

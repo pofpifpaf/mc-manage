@@ -10,6 +10,8 @@ Server types available in this version are :
  - Vanilla
  - Paper
  - Neoforge
+ - Purpur
+ - Fabric
  
 ## Features
 
@@ -23,12 +25,17 @@ Server types available in this version are :
 - Docker installation, with no docker-in-docker
 - Streamlining argument management
 - Lightweight
+- Multiple Java versions concurrently
 
+Example:
 ```
-status: not running
+Info for server: server-name
 
-Type              vanilla
-Version           1.16.5
+status: running
+
+Type              paper
+Version           1.20.6
+Version Arg       144
 Java Version      21
 Memory Allocated  512M
 Memory Max        4G
@@ -37,13 +44,32 @@ Server port       25565
 Level name used   world
 Auto restarts     false
 Boot              false
-Size              36.2 MiB
-Uptime            -
-Players           -/-
-Memory Used       -
+Size              209.4 MiB
+Uptime            1m48s
+Players           0/20
+Memory Used       1.7 GiB
 
-Additional JVM Args     -
-Additional Server Args  -
+Additional JVM Args     1 - -XX:+AlwaysPreTouch
+                        2 - -XX:+DisableExplicitGC
+                        3 - -XX:+ParallelRefProcEnabled
+                        4 - -XX:+PerfDisableSharedMem
+                        5 - -XX:+UnlockExperimentalVMOptions
+                        6 - -XX:+UseG1GC
+                        7 - -XX:G1HeapRegionSize=8M
+                        8 - -XX:G1HeapWastePercent=5
+                        9 - -XX:G1MaxNewSizePercent=40
+                        10 - -XX:G1MixedGCCountTarget=4
+                        11 - -XX:G1MixedGCLiveThresholdPercent=90
+                        12 - -XX:G1NewSizePercent=30
+                        13 - -XX:G1RSetUpdatingPauseTimePercent=5
+                        14 - -XX:G1ReservePercent=20
+                        15 - -XX:InitiatingHeapOccupancyPercent=15
+                        16 - -XX:MaxGCPauseMillis=200
+                        17 - -XX:MaxTenuringThreshold=1
+                        18 - -XX:SurvivorRatio=32
+Additional Server Args  1 - example-argument
+
+
 ```
 
 ## Installation
@@ -77,6 +103,6 @@ networks: {}
 
 ## Roadmap / Potential future features
 
-- Other server type support (Neoforge, Forge, Paper...)
+- Other server type support
 - MOTD generator and/or viewer
 - Backups

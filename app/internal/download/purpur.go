@@ -40,14 +40,14 @@ func purpurPrintAvailableVersions(version string) error {
 	}
 
 	ui.PrintError("Couldn't find the specified build number")
-	ui.PrintInfo(fmt.Sprintf("The last %d available builds for this version are :\n", paperBuildNumberDisplayed))
+	ui.PrintInfo(fmt.Sprintf("The last %d available builds for this version are :\n", purpurBuildNumberDisplayed))
 
 	slices.Sort(manifest.Builds.All)
 	slices.Reverse(manifest.Builds.All)
 
 	for i, build := range manifest.Builds.All {
 		fmt.Printf("    %s\n", build)
-		if i > paperBuildNumberDisplayed {
+		if i > purpurBuildNumberDisplayed {
 			fmt.Println("    ...")
 			break
 		}
