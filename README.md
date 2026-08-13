@@ -9,6 +9,7 @@ GitHub page: https://github.com/pofpifpaf/mc-manage
 Server types available in this version are :
  - Vanilla
  - Paper
+ - Neoforge
  
 ## Features
 

@@ -9,6 +9,10 @@ GitHub page: https://github.com/pofpifpaf/mc-manage
 
 Server types available in this version are :
         - vanilla
+        - paper
+        - neoforge
+
+For more information on the specifities of server types, see "manager help type"
 
 Usage: manager [options...]
     daemon                  
@@ -16,10 +20,10 @@ Usage: manager [options...]
     ping                    
             sends a ping request with the daemon, checking if it is running
     
-    create [server-name] [server-type] [version]
+    create [server-name] [server-type] [version] [additional-args...]
             creates the directory and copies a template for the chosen type, along with a jar file for the specified version
     
-    import [folder-name] [server-type] [version]
+    import [folder-name] [server-type] [version] [additional-args...]
             creates a config.json file for the specified folder and downloads the appropriate jar
     
     list                    

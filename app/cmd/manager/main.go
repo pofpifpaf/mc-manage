@@ -127,6 +127,10 @@ func run() error {
 
 	case "help", "--help", "-?", "?":
 
+		if len(os.Args) == 3 && os.Args[2] == "type" {
+			return ui.PrintTypeHelpMessage()
+		}
+
 		return ui.PrintMainHelpMessage()
 
 	case "inspect":

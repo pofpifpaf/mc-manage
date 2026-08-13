@@ -299,3 +299,7 @@ func PrintMainHelpMessage() error {
 func PrintSetHelpMessage() error {
 	return printEmbeddedFile("documentation/set.txt")
 }
+
+func PrintTypeHelpMessage() error {
+	return printEmbeddedFile("documentation/type.txt")
+}
