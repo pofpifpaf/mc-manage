@@ -46,6 +46,11 @@ func DownloadJar(cfg *protocol.Config) error {
 
 	if isArchived, _ := RetrieveJarIfArchived(cfg); isArchived {
 		ui.PrintInfo(fmt.Sprintf("Retrieved config file from archive for server %s and version %s", cfg.Name, cfg.Version))
+		if cfg.Type == "paper" {
+			if err := paperSetRecommendedJVMArguments(cfg); err != nil {
+				ui.PrintWarning("could not set recommended jvm args: " + err.Error())
+			}
+		}
 		return nil
 	}
 

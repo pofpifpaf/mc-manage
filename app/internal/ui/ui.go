@@ -165,7 +165,10 @@ func PrintInspectServer(server protocol.ServerInfo, cfg *protocol.Config) {
 	fmt.Fprintf(w, "Auto restarts\t%t\n", cfg.AutomaticRestarts)
 	fmt.Fprintf(w, "Boot\t%t\n", cfg.StartOnBoot)
 
-	dirSize, _ := paths.DirSize(paths.Server(server.Name))
+	dirSize, err := paths.DirSize(paths.Server(cfg.Name))
+	if err != nil {
+		dirSize = "-"
+	}
 	fmt.Fprintf(w, "Size\t%s\n", dirSize)
 
 	if server.Running != protocol.StateStopped {
