@@ -131,7 +131,7 @@ func RemoveAdditionalJVMArg(server, argIndex string) error {
 	if err := updateAdditionalArgs(server, func(cfg *protocol.Config) error {
 
 		if cfg.Type == "neoforge" {
-			if err := NeoforgeRemoveJVMArg(server, cfg.AdditionalJVMArgs[index]); err != nil {
+			if err := NeoforgeRemoveJVMArg(server, cfg.AdditionalJVMArgs, index); err != nil {
 				return err
 			}
 		}

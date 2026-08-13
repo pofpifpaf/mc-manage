@@ -149,9 +149,13 @@ func NeoforgeAddJVMArg(server, arg string) error {
 
 	userArgsPath := filepath.Join(paths.Server(server), "user_jvm_args.txt")
 
+	if strings.ContainsAny(arg, "#\"/~|") {
+		return fmt.Errorf("invalid character in argument %q", arg)
+	}
+
 	data, err := os.ReadFile(userArgsPath)
 	if err != nil {
-		return err
+		return fmt.Errorf("Has a correct jar file been downloaded and installed? %s", err.Error())
 	}
 
 	output := string(data) + "\n" + arg + "\n"
@@ -159,8 +163,13 @@ func NeoforgeAddJVMArg(server, arg string) error {
 	return os.WriteFile(userArgsPath, []byte(output), 0644)
 }
 
-func NeoforgeRemoveJVMArg(server, arg string) error {
+func NeoforgeRemoveJVMArg(server string, args []string, index int) error {
 
+	if index < 0 || index >= len(args) {
+		return fmt.Errorf("index %d out of range", index+1)
+	}
+
+	arg := args[index]
 	userArgsPath := filepath.Join(paths.Server(server), "user_jvm_args.txt")
 
 	file, err := os.Open(userArgsPath)
