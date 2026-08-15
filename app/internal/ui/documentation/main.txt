@@ -11,6 +11,9 @@ Server types available in this version are :
         - vanilla
         - paper
         - neoforge
+        - purpur
+        - fabric
+        - forge
 
 For more information on the specifities of server types, see "manager help type"
 

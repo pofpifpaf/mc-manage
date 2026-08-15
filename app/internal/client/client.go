@@ -285,7 +285,7 @@ func setServerVersion(name, serverVersion, serverVersionArg string) error {
 		return fmt.Errorf("Version for server %s is already %s", name, serverVersion)
 	}
 
-	if err := download.ArchiveJarFile(cfg); err != nil {
+	if err := download.ArchiveJarFile(cfg); err != nil && cfg.Type != "neoforge" && cfg.Type != "forge" {
 		ui.PrintWarning("Unable to archive old jar file")
 	}
 
@@ -325,8 +325,8 @@ func setJavaVersion(name, javaVersion string) error {
 	}
 
 	switch cfg.Type {
-	case "neoforge":
-		return config.NeoforgeConfigureJavaRunScript(name)
+	case "neoforge", "forge":
+		return config.ConfigureJavaRunScript(name)
 	default:
 		return nil
 	}
@@ -361,8 +361,8 @@ func setAllocatedMemory(server, mem string) error {
 	}
 
 	switch cfg.Type {
-	case "neoforge":
-		return config.NeoforgeSetJVMMemoryArgs(server)
+	case "neoforge", "forge":
+		return config.ScriptSetJVMMemoryArgs(server)
 	default:
 		return nil
 	}
@@ -386,8 +386,8 @@ func setMaxMemory(server, mem string) error {
 	}
 
 	switch cfg.Type {
-	case "neoforge":
-		return config.NeoforgeSetJVMMemoryArgs(server)
+	case "neoforge", "forge":
+		return config.ScriptSetJVMMemoryArgs(server)
 	default:
 		return nil
 	}

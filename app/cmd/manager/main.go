@@ -13,6 +13,11 @@ import (
 )
 
 func main() {
+	if len(os.Args) <= 1 {
+		ui.PrintMainHelpMessage()
+		os.Exit(0)
+	}
+
 	if err := run(); err != nil {
 		ui.PrintError(err.Error())
 		os.Exit(1)

@@ -7,10 +7,11 @@ import (
 	"minecraft-manager/internal/ui"
 	"os"
 	"path/filepath"
+	"strconv"
 	"strings"
 )
 
-func NeoforgeConfigureJavaRunScript(server string) error {
+func ConfigureJavaRunScript(server string) error {
 
 	cfg, err := Load(server)
 	if err != nil {
@@ -37,7 +38,7 @@ func NeoforgeConfigureJavaRunScript(server string) error {
 	return nil
 }
 
-func NeoforgeSetJVMMemoryArgs(server string) error {
+func ScriptSetJVMMemoryArgs(server string) error {
 
 	cfg, err := Load(server)
 	if err != nil {
@@ -91,7 +92,7 @@ func NeoforgeSetJVMMemoryArgs(server string) error {
 	return os.WriteFile(userArgsPath, []byte(output), 0644)
 }
 
-func NeoforgeGetJVMArgs(server string) error {
+func ScriptGetJVMArgs(server string) error {
 
 	cfg, err := Load(server)
 	if err != nil {
@@ -145,7 +146,7 @@ func NeoforgeGetJVMArgs(server string) error {
 	return Save(server, cfg)
 }
 
-func NeoforgeAddJVMArg(server, arg string) error {
+func ScriptAddJVMArg(server, arg string) error {
 
 	userArgsPath := filepath.Join(paths.Server(server), "user_jvm_args.txt")
 
@@ -163,7 +164,7 @@ func NeoforgeAddJVMArg(server, arg string) error {
 	return os.WriteFile(userArgsPath, []byte(output), 0644)
 }
 
-func NeoforgeRemoveJVMArg(server string, args []string, index int) error {
+func ScriptRemoveJVMArg(server string, args []string, index int) error {
 
 	if index < 0 || index >= len(args) {
 		return fmt.Errorf("index %d out of range", index+1)
@@ -208,4 +209,15 @@ func NeoforgeRemoveJVMArg(server string, args []string, index int) error {
 
 	output := strings.Join(lines, "\n")
 	return os.WriteFile(userArgsPath, []byte(output), 0644)
+}
+
+func ForgeIsVersionScriptBased(version string) (bool, error) {
+	version, _ = strings.CutPrefix(version, "1.")
+
+	versionFloat, err := strconv.ParseFloat(version, 32)
+	if err != nil {
+		return false, err
+	}
+
+	return (int(versionFloat) >= 17), nil
 }

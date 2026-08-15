@@ -89,8 +89,8 @@ func AddAdditionalJVMArg(server, arg string) error {
 
 	if err := updateAdditionalArgs(server, func(cfg *protocol.Config) error {
 
-		if cfg.Type == "neoforge" {
-			if err := NeoforgeAddJVMArg(server, arg); err != nil {
+		if cfg.Type == "neoforge" || cfg.Type == "forge" {
+			if err := ScriptAddJVMArg(server, arg); err != nil {
 				return err
 			}
 		}
@@ -130,8 +130,8 @@ func RemoveAdditionalJVMArg(server, argIndex string) error {
 
 	if err := updateAdditionalArgs(server, func(cfg *protocol.Config) error {
 
-		if cfg.Type == "neoforge" {
-			if err := NeoforgeRemoveJVMArg(server, cfg.AdditionalJVMArgs, index); err != nil {
+		if cfg.Type == "neoforge" || cfg.Type == "forge" {
+			if err := ScriptRemoveJVMArg(server, cfg.AdditionalJVMArgs, index); err != nil {
 				return err
 			}
 		}

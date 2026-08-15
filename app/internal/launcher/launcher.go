@@ -29,6 +29,22 @@ func Build(server string) (*exec.Cmd, bool, string, error) {
 		if err != nil {
 			return nil, false, "", err
 		}
+	case "forge":
+		script, err := config.ForgeIsVersionScriptBased(cfg.Version)
+		if err != nil {
+			return nil, false, "", err
+		}
+		if script {
+			cmd, err = buildRunSH(cfg, "run.sh")
+			if err != nil {
+				return nil, false, "", err
+			}
+		} else {
+			cmd, err = buildJarFile(cfg, javaPath)
+			if err != nil {
+				return nil, false, "", err
+			}
+		}
 	default:
 		cmd, err = buildJarFile(cfg, javaPath)
 		if err != nil {

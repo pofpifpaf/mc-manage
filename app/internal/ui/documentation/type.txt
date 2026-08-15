@@ -39,4 +39,14 @@ The different server types are:
                 "manager create server-name fabric 1.21.6 0.14.22"
                 "manager create server-name fabric 1.21.6 0.14.22 1.1.2" 
 
+    forge
+        additional-args = forge version
+
+        Entering an incorrect loader version will display the 10 latest available installers compatible with the version cited.
+        No additional argument will grab the latest stable compatible build.
+        Consider downloading directly from https://files.minecraftforge.net/net/minecraftforge/forge/ to support Forge creators.
+        You can use "manager PLACEHOLDER" to paste the link directly.
+        Examples:
+                "manager create server-name forge 1.21.6"
+                "manager create server-name forge 26.2 65.1.0"
 

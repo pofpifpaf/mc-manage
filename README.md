@@ -12,6 +12,7 @@ Server types available in this version are :
  - Neoforge
  - Purpur
  - Fabric
+ - Forge
  
 ## Features
 
