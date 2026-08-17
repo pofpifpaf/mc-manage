@@ -6,13 +6,19 @@ The different server types are:
         This is the default server type. It is the official Mojang version.
         Snapshots and pre-release versions are supported.
 
+        Examples: 
+                "manager create server-name vanilla 1.21"
+                "manager set server-name version 1.17"
+
     paper
         additional-args = build number
         
         Entering an incorrect build number will display the 10 latest available builds.
         No build number will grab the latest build. In this mode, only STABLE releases can be selected.
         The recommended jvm arguments for each version is set automatically when downloading the jar. 
-        Example : "manager create server-name paper 1.20.6 144" 
+        Examples : 
+                "manager create server-name paper 1.20.6 144"
+                "manager set server-name version 1.20.6" 
 
     neoforge
         The full version number (including the build) must be valid and put. 

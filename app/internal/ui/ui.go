@@ -7,6 +7,8 @@ import (
 	"minecraft-manager/internal/paths"
 	"minecraft-manager/internal/protocol"
 	"os"
+	"slices"
+	"strconv"
 	"strings"
 	"text/tabwriter"
 	"time"
@@ -214,6 +216,48 @@ func PrintInspectServer(server protocol.ServerInfo, cfg *protocol.Config) {
 	}
 }
 
+func PrintInstalledJavaVersions() error {
+
+	fmt.Print(("\n"))
+	defer fmt.Print("\n")
+
+	dirEntries, err := os.ReadDir(paths.JavaRoot)
+	if err != nil {
+		return err
+	}
+
+	PrintInfo("The installed java versions are :")
+
+	var versions []int
+	var weirdVersions []string
+
+	for _, d := range dirEntries {
+		if !d.IsDir() {
+			continue
+		}
+
+		v, err := strconv.Atoi(d.Name())
+		if err == nil {
+			versions = append(versions, v)
+		} else {
+			weirdVersions = append(weirdVersions, d.Name())
+		}
+
+	}
+
+	slices.Sort(versions)
+
+	for _, version := range versions {
+		fmt.Printf("      %d\n", version)
+	}
+
+	for _, version := range weirdVersions {
+		fmt.Println("      " + version)
+	}
+
+	return nil
+}
+
 func wrapLine(s string, width int) string {
 	indentLen := len(s) - len(strings.TrimLeft(s, " "))
 	indent := s[:indentLen]
@@ -307,4 +351,8 @@ func PrintSetHelpMessage() error {
 
 func PrintTypeHelpMessage() error {
 	return printEmbeddedFile("documentation/type.txt")
+}
+
+func PrintJavaHelpMessage() error {
+	return printEmbeddedFile("documentation/java.txt")
 }

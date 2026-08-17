@@ -16,7 +16,7 @@ The different parameters are:
     motd <string>
             sets the MOTD of the server
     
-    version <string>
+    version <string> <--force/optional>
             sets the version of the server. Attempts to download the appropriate jar.
     
     java <string>

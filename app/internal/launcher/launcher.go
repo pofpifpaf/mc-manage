@@ -3,6 +3,7 @@ package launcher
 import (
 	"fmt"
 	"minecraft-manager/internal/config"
+	"minecraft-manager/internal/download"
 	"minecraft-manager/internal/java"
 	"minecraft-manager/internal/paths"
 	"minecraft-manager/internal/protocol"
@@ -30,7 +31,7 @@ func Build(server string) (*exec.Cmd, bool, string, error) {
 			return nil, false, "", err
 		}
 	case "forge":
-		script, err := config.ForgeIsVersionScriptBased(cfg.Version)
+		script, err := download.ForgeIsVersionScriptBased(cfg.Version)
 		if err != nil {
 			return nil, false, "", err
 		}

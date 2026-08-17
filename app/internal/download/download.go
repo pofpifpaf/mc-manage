@@ -94,10 +94,18 @@ func DownloadJar(cfg *protocol.Config) error {
 			return err
 		}
 	default:
-		ui.PrintError("\"" + cfg.Type + "\" Unsupported type")
+		return fmt.Errorf("Unsupported type: %q", cfg.Type)
 	}
 
-	return err
+	cfg.Java, err = java.GetCorrectJavaVersion(cfg.Version, cfg.Type)
+	if err != nil {
+		ui.PrintWarning("couldn't automatically set java version: " + err.Error())
+		ui.PrintInfo("Setting Java version to default: " + cfg.Java)
+	} else {
+		ui.PrintInfo("Automatically setting Java Version to " + cfg.Java)
+	}
+
+	return nil
 }
 
 func DownloadCustomJar(cfg *protocol.Config, downloadURL string) error {
@@ -149,23 +157,6 @@ func ArchiveJarFile(cfg *protocol.Config) error {
 	if err := os.Rename(oldPath, newPath); err != nil {
 		return err
 	}
-	return nil
-}
-
-func forgeSetupServerJarFile(cfg *protocol.Config) error {
-
-	ui.PrintInfo("Version predates 1.17, handling with jar instead of run script")
-
-	if err := os.Remove(paths.Jar(cfg.Name, cfg.Jar)); err != nil {
-		return err
-	}
-
-	serverJarFileName := "minecraft_server." + cfg.Version + ".jar"
-
-	if err := os.Rename(paths.Jar(cfg.Name, serverJarFileName), paths.Jar(cfg.Name, cfg.Jar)); err != nil {
-		return err
-	}
-
 	return nil
 }
 
@@ -252,11 +243,11 @@ func runInstaller(cfg *protocol.Config) error {
 
 	cfg.AdditionalServArgs = append(cfg.AdditionalServArgs, "nogui")
 
-	script, err := config.ForgeIsVersionScriptBased(cfg.Version)
+	script, err := ForgeIsVersionScriptBased(cfg.Version)
 	if err != nil {
 		ui.PrintWarning(err.Error())
 	}
-	if !script {
+	if !script && cfg.Type == "forge" {
 		if err := forgeSetupServerJarFile(cfg); err != nil {
 			ui.PrintWarning(err.Error())
 		}

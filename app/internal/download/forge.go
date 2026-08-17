@@ -11,6 +11,7 @@ import (
 	"net/http"
 	"os"
 	"slices"
+	"strconv"
 	"strings"
 )
 
@@ -57,6 +58,34 @@ func forgeGetCompatibleVersions(version string) ([]string, error) {
 	slices.Reverse(versions)
 
 	return versions, nil
+}
+
+func ForgeIsVersionScriptBased(version string) (bool, error) {
+	version, _ = strings.CutPrefix(version, "1.")
+
+	versionFloat, err := strconv.ParseFloat(version, 32)
+	if err != nil {
+		return false, err
+	}
+
+	return (int(versionFloat) >= 17), nil
+}
+
+func forgeSetupServerJarFile(cfg *protocol.Config) error {
+
+	ui.PrintInfo("Version predates 1.17, handling with jar instead of run script")
+
+	if err := os.Remove(paths.Jar(cfg.Name, cfg.Jar)); err != nil {
+		return err
+	}
+
+	serverJarFileName := "minecraft_server." + cfg.Version + ".jar"
+
+	if err := os.Rename(paths.Jar(cfg.Name, serverJarFileName), paths.Jar(cfg.Name, cfg.Jar)); err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func forgeGetLatestDownloadURL(version string) (string, string, error) {

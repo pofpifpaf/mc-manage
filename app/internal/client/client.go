@@ -11,6 +11,7 @@ import (
 	"minecraft-manager/internal/ui"
 	"os"
 	"strconv"
+	"strings"
 	"time"
 )
 
@@ -121,24 +122,29 @@ func MakeList() ([]protocol.ServerInfo, error) {
 func SetParameter(args []string) error {
 
 	var server, arg1, arg2, arg3 string
-	switch len(os.Args) {
-	case 5:
-		server = os.Args[2]
-		arg1 = os.Args[3]
-		arg2 = os.Args[4]
+	switch {
+	case len(args) == 5:
+		server = args[2]
+		arg1 = args[3]
+		arg2 = args[4]
 		arg3 = ""
-	case 6:
-		server = os.Args[2]
-		arg1 = os.Args[3]
-		arg2 = os.Args[4]
-		arg3 = os.Args[5]
-	case 7:
-		server = os.Args[2]
-		arg1 = os.Args[3]
-		arg2 = os.Args[4]
-		arg3 = os.Args[5] + "-" + os.Args[6]
+	case len(args) >= 6:
+		server = args[2]
+		arg1 = args[3]
+		arg2 = args[4]
+		arg3 = args[5]
+		for _, arg := range args[6:] {
+			arg3 = arg3 + "-" + arg
+		}
 	default:
-		return fmt.Errorf("Invalid number of arguments: %d", len(os.Args))
+		return fmt.Errorf("Invalid number of arguments: %d", len(args))
+	}
+
+	setForce := false
+	if strings.Contains(arg3, "--force") {
+		arg3 = strings.Replace(arg3, "---force", "", 1)
+		arg3 = strings.Replace(arg3, "--force", "", 1)
+		setForce = true
 	}
 
 	fmt.Print("\n")
@@ -179,7 +185,7 @@ func SetParameter(args []string) error {
 
 	case "version":
 
-		if err := setServerVersion(server, arg2, arg3); err != nil {
+		if err := setServerVersion(server, arg2, arg3, setForce); err != nil {
 			return err
 		}
 
@@ -270,7 +276,7 @@ func setServerAutoRestart(name, autoRestart string) error {
 	}
 }
 
-func setServerVersion(name, serverVersion, serverVersionArg string) error {
+func setServerVersion(name, serverVersion, serverVersionArg string, force bool) error {
 
 	cfg, err := config.Load(name)
 	if err != nil {
@@ -281,16 +287,16 @@ func setServerVersion(name, serverVersion, serverVersionArg string) error {
 	oldServerVersionArg := cfg.VersionArg
 	oldJVMArg := cfg.AdditionalJVMArgs
 
-	if cfg.Version == serverVersion && cfg.VersionArg == serverVersionArg {
-		return fmt.Errorf("Version for server %s is already %s", name, serverVersion)
+	if cfg.Version == serverVersion && cfg.VersionArg == serverVersionArg && !force {
+		return fmt.Errorf("Version for server %s is already %q (use \"--force\" to bypass)", name, serverVersion)
 	}
 
-	if err := download.ArchiveJarFile(cfg); err != nil && cfg.Type != "neoforge" && cfg.Type != "forge" {
+	if err := download.ArchiveJarFile(cfg); err != nil && cfg.Type != "neoforge" && cfg.Type != "forge" && !force {
 		ui.PrintWarning("Unable to archive old jar file")
 	}
 
 	if err := download.RemoveRecommendedJVMArguments(cfg); err != nil {
-		ui.PrintWarning("Couldn't remove old recommended jvm arguments" + err.Error())
+		ui.PrintWarning("Couldn't remove old recommended jvm arguments: " + err.Error())
 	}
 
 	cfg.Version = serverVersion

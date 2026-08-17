@@ -1,0 +1,48 @@
+
+This is the help for the different java versions. Use "manager help" for the standard help message. 
+
+When creating/importing/setting the version of a server, the manager will pick the required/recommended java versions. This java version can be changed using "manager set java <server-name> <version>".
+
+The different java versions "officially" supported are:
+
+    Version  Pre-installed  Official java download
+    -------  -------------  ----------------------
+     6         no             no
+     7         no             no
+     8         yes            yes
+     11        no             yes
+     16        no             no
+     17        yes            yes
+     21        yes            yes
+     25        no             yes
+
+Versions not marked as official java downloads are downloaded through archive repositories. Those versions are thus not maintained anymore. "manager install-java" will try the adoptium releases, even if the version is not present in this list. 
+
+However, custom URLs can be inputted using "manager install-custom-java [version] [url]". This will retrieve the file and extract it as a regular tarball. 
+
+For version 5, it is necessary to use "manager-custom-java 5 [url]", which will run the installer.
+
+The correspondance between type/version and java version are:
+
+    MC Version  Java Version
+    ----------  ------------
+    <1.6.1      5
+    <1.12       6
+    <1.17       8
+    <1.18       16
+    <1.20.5     17
+    <26         21
+    >=26        25
+
+For Paper the correspondance is slightly different :
+
+    MC Version  Java Version
+    ----------  ------------
+    <1.12       8
+    <1.16.5     11
+    <1.17       16
+    <1.20       17
+    <26         21
+    >=26        25
+
+    

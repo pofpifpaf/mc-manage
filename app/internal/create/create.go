@@ -68,7 +68,7 @@ func Create(args []string) error {
 	}
 
 	if err := download.DownloadJar(cfg); err != nil {
-		ui.PrintWarning("Unable to download jar, use \"manager set <server> version\" to retry jar download")
+		ui.PrintWarning("Unable to download jar, use \"manager set <server> version <version> --force\" to retry jar download")
 		ui.PrintWarning("Error downloading jar: " + err.Error())
 	}
 

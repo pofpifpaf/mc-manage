@@ -6,6 +6,7 @@ import (
 	"minecraft-manager/internal/config"
 	"minecraft-manager/internal/create"
 	"minecraft-manager/internal/daemon"
+	"minecraft-manager/internal/java"
 	"minecraft-manager/internal/paths"
 	"minecraft-manager/internal/templates"
 	"minecraft-manager/internal/ui"
@@ -19,7 +20,7 @@ func main() {
 	}
 
 	if err := run(); err != nil {
-		ui.PrintError(err.Error())
+		ui.PrintError(err.Error() + "\n")
 		os.Exit(1)
 	}
 }
@@ -134,6 +135,8 @@ func run() error {
 
 		if len(os.Args) == 3 && os.Args[2] == "type" {
 			return ui.PrintTypeHelpMessage()
+		} else if len(os.Args) == 3 && os.Args[2] == "java" {
+			return ui.PrintJavaHelpMessage()
 		}
 
 		return ui.PrintMainHelpMessage()
@@ -158,6 +161,26 @@ func run() error {
 
 		return templates.PrintConfigFile()
 
+	case "install-java", "ijv":
+
+		if len(os.Args) < 3 {
+			return fmt.Errorf("usage: manager install-java [version]")
+		}
+
+		return java.InstallJavaVersion(os.Args[2])
+
+	case "install-custom-java":
+
+		if len(os.Args) < 4 {
+			return fmt.Errorf("usage: manager install-custom-java [version] [url]")
+		}
+
+		return java.InstallCustomJavaVersion(os.Args[2], os.Args[3])
+
+	case "list-java":
+
+		return ui.PrintInstalledJavaVersions()
+
 	case "motd":
 
 		return fmt.Errorf("not yet implemented") // TODO: motd generator
@@ -167,6 +190,6 @@ func run() error {
 		return fmt.Errorf("not yet implemented") // TODO
 
 	default:
-		return fmt.Errorf("unknown command %q", os.Args[1])
+		return fmt.Errorf("Unknown Command %q", os.Args[1])
 	}
 }

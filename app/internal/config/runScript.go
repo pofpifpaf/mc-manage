@@ -7,7 +7,6 @@ import (
 	"minecraft-manager/internal/ui"
 	"os"
 	"path/filepath"
-	"strconv"
 	"strings"
 )
 
@@ -209,15 +208,4 @@ func ScriptRemoveJVMArg(server string, args []string, index int) error {
 
 	output := strings.Join(lines, "\n")
 	return os.WriteFile(userArgsPath, []byte(output), 0644)
-}
-
-func ForgeIsVersionScriptBased(version string) (bool, error) {
-	version, _ = strings.CutPrefix(version, "1.")
-
-	versionFloat, err := strconv.ParseFloat(version, 32)
-	if err != nil {
-		return false, err
-	}
-
-	return (int(versionFloat) >= 17), nil
 }
