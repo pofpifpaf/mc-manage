@@ -16,19 +16,27 @@ import (
 )
 
 func StartServer(server string) error {
+	valid, server := paths.ValidateServerName(server)
+	if !valid {
+		return fmt.Errorf("Invalid server name")
+	}
 	return send(
 		protocol.Request{
 			Command: "START",
-			Server:  os.Args[2],
+			Server:  server,
 		},
 	)
 }
 
 func StopServer(server string) error {
+	valid, server := paths.ValidateServerName(server)
+	if !valid {
+		return fmt.Errorf("Invalid server name")
+	}
 	return send(
 		protocol.Request{
 			Command: "STOP",
-			Server:  os.Args[2],
+			Server:  server,
 		},
 	)
 }
@@ -138,6 +146,11 @@ func SetParameter(args []string) error {
 		}
 	default:
 		return fmt.Errorf("Invalid number of arguments: %d", len(args))
+	}
+
+	valid, server := paths.ValidateServerName(server)
+	if !valid {
+		return fmt.Errorf("Invalid server name")
 	}
 
 	setForce := false
@@ -433,6 +446,11 @@ func SetGracePeriod(period string) error {
 
 func DownloadJarToServer(server, downloadURL string) error {
 
+	valid, server := paths.ValidateServerName(server)
+	if !valid {
+		return fmt.Errorf("Invalid server name")
+	}
+
 	fmt.Print("\n")
 	defer fmt.Print("\n")
 
@@ -451,6 +469,11 @@ func DownloadJarToServer(server, downloadURL string) error {
 }
 
 func InspectServer(name string) error {
+
+	valid, name := paths.ValidateServerName(name)
+	if !valid {
+		return fmt.Errorf("Invalid server name")
+	}
 
 	resp, err := sendProtocol(protocol.Request{
 		Command: "INSPECT",
@@ -480,6 +503,11 @@ func InspectServer(name string) error {
 
 func KillServer(name string) error {
 
+	valid, name := paths.ValidateServerName(name)
+	if !valid {
+		return fmt.Errorf("Invalid server name")
+	}
+
 	return send(protocol.Request{
 		Command: "KILL",
 		Server:  name,
@@ -498,4 +526,52 @@ func getActivePlayerInformation(server protocol.ServerInfo) (protocol.ServerInfo
 	server.PlayersOnlineMax = status.Players.Max
 
 	return server, nil
+}
+
+func SetProperty(server, key, value string) error {
+
+	fmt.Print("\n")
+	defer fmt.Print("\n")
+
+	ui.PrintInfo(fmt.Sprintf("Setting key %s to %s in %s", key, value, paths.ServerProperties(server)))
+
+	valid, server := paths.ValidateServerName(server)
+	if !valid {
+		return fmt.Errorf("Invalid server name")
+	}
+
+	if err := config.SetServerProperty(paths.ServerProperties(server), key, value); err != nil {
+		return err
+	}
+
+	ui.PrintSuccess("Successfully set property")
+	return nil
+}
+
+func ReloadProperties(server string) error {
+
+	fmt.Print("\n")
+	defer fmt.Print("\n")
+
+	valid, server := paths.ValidateServerName(server)
+	if !valid {
+		return fmt.Errorf("Invalid server name")
+	}
+
+	cfg, err := config.Load(server)
+	if err != nil {
+		return err
+	}
+
+	if err := config.LoadFromExisting(cfg); err != nil {
+		return err
+	}
+
+	if err := config.Save(server, cfg); err != nil {
+		return err
+	}
+
+	ui.PrintSuccess("Reload complete")
+
+	return nil
 }

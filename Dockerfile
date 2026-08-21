@@ -31,17 +31,17 @@ RUN mkdir -p /opt/java && \
     mkdir -p /opt/java/8 && \
     tar -xzf /tmp/java8.tar.gz -C /opt/java/8 --strip-components=1 && \
     \
-    # Java 17 JRE
-    wget -q https://api.adoptium.net/v3/binary/latest/17/ga/linux/x64/jre/hotspot/normal/eclipse \
-        -O /tmp/java17.tar.gz && \
-    mkdir -p /opt/java/17 && \
-    tar -xzf /tmp/java17.tar.gz -C /opt/java/17 --strip-components=1 && \
-    \
     # Java 21 JRE
     wget -q https://api.adoptium.net/v3/binary/latest/21/ga/linux/x64/jre/hotspot/normal/eclipse \
         -O /tmp/java21.tar.gz && \
     mkdir -p /opt/java/21 && \
     tar -xzf /tmp/java21.tar.gz -C /opt/java/21 --strip-components=1 && \
+    \
+    # Java 25 JRE
+    wget -q https://api.adoptium.net/v3/binary/latest/25/ga/linux/x64/jre/hotspot/normal/eclipse \
+        -O /tmp/java25.tar.gz && \
+    mkdir -p /opt/java/25 && \
+    tar -xzf /tmp/java25.tar.gz -C /opt/java/25 --strip-components=1 && \
     \
     rm -f /tmp/*.tar.gz
 

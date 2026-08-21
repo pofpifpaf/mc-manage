@@ -30,6 +30,11 @@ func Create(args []string) error {
 		return fmt.Errorf("Invalid number of arguments: %d", len(os.Args))
 	}
 
+	valid, name := paths.ValidateServerName(name)
+	if !valid {
+		return fmt.Errorf("Invalid server name")
+	}
+
 	fmt.Print("\n")
 	defer fmt.Print("\n")
 
@@ -100,6 +105,11 @@ func ImportServer(args []string) error {
 		return fmt.Errorf("Invalid number of arguments: %d", len(os.Args))
 	}
 
+	valid, name := paths.ValidateServerName(name)
+	if !valid {
+		return fmt.Errorf("Invalid server name")
+	}
+
 	fmt.Print("\n")
 	defer fmt.Print("\n")
 
@@ -139,23 +149,7 @@ func ImportServer(args []string) error {
 		}
 	}
 
-	serverPropertiesPath := paths.ServerProperties(name)
-	if _, err := os.Stat(serverPropertiesPath); err == nil {
-
-		ui.PrintInfo("Found server.properties file at " + serverPropertiesPath)
-
-		port, err := config.GetServerProperty(serverPropertiesPath, "server-port")
-		if err == nil {
-			ui.PrintInfo("Found server-port key, port = " + port)
-			cfg.Port = port
-		}
-
-		worldName, err := config.GetServerProperty(serverPropertiesPath, "level-name")
-		if err == nil {
-			ui.PrintInfo("Found level-name key, world = " + worldName)
-			cfg.LevelName = worldName
-		}
-	}
+	_ = config.LoadFromExisting(cfg)
 
 	if err := config.Save(cfg.Name, cfg); err != nil {
 		return err

@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io/fs"
 	"path/filepath"
+	"strings"
 )
 
 func DirSize(path string) (string, error) {
@@ -44,4 +45,10 @@ func HumanBytes(size int64) string {
 		float64(size)/float64(div),
 		"KMGTPE"[exp],
 	)
+}
+
+func ValidateServerName(server string) (bool, string) {
+	server, _ = strings.CutSuffix(server, "/")
+
+	return !strings.ContainsAny(server, "/\\:?\"<>|"), server
 }

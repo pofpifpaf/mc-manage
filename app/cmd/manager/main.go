@@ -90,7 +90,7 @@ func run() error {
 		if len(os.Args) != 5 {
 			return fmt.Errorf("usage: manager set-property <server> <key> <value>")
 		}
-		return config.SetServerProperty(os.Args[2], os.Args[3], os.Args[4])
+		return client.SetProperty(os.Args[2], os.Args[3], os.Args[4])
 
 	case "download":
 		if len(os.Args) != 4 {
@@ -180,6 +180,13 @@ func run() error {
 	case "list-java":
 
 		return ui.PrintInstalledJavaVersions()
+
+	case "reload-prop":
+		if len(os.Args) < 3 {
+			return fmt.Errorf("usage: manager reload [server]")
+		}
+
+		return client.ReloadProperties(os.Args[2])
 
 	case "motd":
 

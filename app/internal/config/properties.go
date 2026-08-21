@@ -3,6 +3,9 @@ package config
 import (
 	"bufio"
 	"fmt"
+	"minecraft-manager/internal/paths"
+	"minecraft-manager/internal/protocol"
+	"minecraft-manager/internal/ui"
 	"os"
 	"strings"
 )
@@ -84,4 +87,31 @@ func GetServerProperty(filename, key string) (string, error) {
 	}
 
 	return result, nil
+}
+
+func LoadFromExisting(cfg *protocol.Config) error {
+	serverPropertiesPath := paths.ServerProperties(cfg.Name)
+
+	var err error
+
+	if _, err = os.Stat(serverPropertiesPath); err == nil {
+
+		ui.PrintInfo("Found server.properties file at " + serverPropertiesPath)
+
+		port, err := GetServerProperty(serverPropertiesPath, "server-port")
+		if err == nil {
+			ui.PrintInfo("Found server-port key, port = " + port)
+			cfg.Port = port
+		}
+
+		worldName, err := GetServerProperty(serverPropertiesPath, "level-name")
+		if err == nil {
+			ui.PrintInfo("Found level-name key, world = " + worldName)
+			cfg.LevelName = worldName
+		}
+
+	}
+
+	return err
+
 }

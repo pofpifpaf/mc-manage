@@ -58,6 +58,9 @@ Usage: manager [options...]
     
     set-property [server-name] [key] [value]
             changes the specified key in the server's server.properties file to the specified value. No validation checks are done.
+
+    reload-prop [server-name]
+            reloads the data in server.properties and updates config.json accordingly. 
     
     download [server-name] [URL]
             downloads the file at URL and moves it to <servers-folder>/<server-name>/<config-jarfile-name>

@@ -44,6 +44,12 @@ func Save(server string, cfg *protocol.Config) error {
 }
 
 func updateAdditionalArgs(server string, fn func(*protocol.Config) error) error {
+
+	valid, server := paths.ValidateServerName(server)
+	if !valid {
+		return fmt.Errorf("Invalid server name")
+	}
+
 	configFilePath := paths.Config(server)
 
 	data, err := os.ReadFile(configFilePath)
