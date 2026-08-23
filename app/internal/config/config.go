@@ -47,7 +47,7 @@ func updateAdditionalArgs(server string, fn func(*protocol.Config) error) error 
 
 	valid, server := paths.ValidateServerName(server)
 	if !valid {
-		return fmt.Errorf("Invalid server name")
+		return fmt.Errorf("Invalid server name, server names must not contain %s", protocol.InvalidNameCharacters)
 	}
 
 	configFilePath := paths.Config(server)

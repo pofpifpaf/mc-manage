@@ -3,6 +3,7 @@ package paths
 import (
 	"fmt"
 	"io/fs"
+	"minecraft-manager/internal/protocol"
 	"path/filepath"
 	"strings"
 )
@@ -50,5 +51,5 @@ func HumanBytes(size int64) string {
 func ValidateServerName(server string) (bool, string) {
 	server, _ = strings.CutSuffix(server, "/")
 
-	return !strings.ContainsAny(server, "/\\:?\"<>|"), server
+	return !strings.ContainsAny(server, protocol.InvalidNameCharacters), server
 }

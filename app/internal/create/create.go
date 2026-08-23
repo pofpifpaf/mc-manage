@@ -6,8 +6,10 @@ import (
 	"minecraft-manager/internal/config"
 	"minecraft-manager/internal/download"
 	"minecraft-manager/internal/paths"
+	"minecraft-manager/internal/protocol"
 	"minecraft-manager/internal/templates"
 	"minecraft-manager/internal/ui"
+	"minecraft-manager/internal/users"
 	"os"
 )
 
@@ -32,7 +34,7 @@ func Create(args []string) error {
 
 	valid, name := paths.ValidateServerName(name)
 	if !valid {
-		return fmt.Errorf("Invalid server name")
+		return fmt.Errorf("Invalid server name, server names must not contain %s", protocol.InvalidNameCharacters)
 	}
 
 	fmt.Print("\n")
@@ -67,6 +69,12 @@ func Create(args []string) error {
 	cfg.Version = version
 	cfg.Type = serverType
 	cfg.VersionArg = versionArg
+
+	if err := users.CreateUser(cfg); err != nil {
+		ui.PrintWarning("Error while creating user : " + err.Error())
+	} else if err := users.SetServerPermissions(cfg); err != nil {
+		ui.PrintWarning("Error while setting folder permissions: " + err.Error())
+	}
 
 	if err := config.Save(cfg.Name, cfg); err != nil {
 		return err
@@ -107,7 +115,7 @@ func ImportServer(args []string) error {
 
 	valid, name := paths.ValidateServerName(name)
 	if !valid {
-		return fmt.Errorf("Invalid server name")
+		return fmt.Errorf("Invalid server name, server names must not contain %s", protocol.InvalidNameCharacters)
 	}
 
 	fmt.Print("\n")
@@ -141,6 +149,12 @@ func ImportServer(args []string) error {
 	cfg.Type = serverType
 	cfg.Version = version
 	cfg.VersionArg = versionArg
+
+	if err := users.CreateUser(cfg); err != nil {
+		ui.PrintWarning("Error while creating user : " + err.Error())
+	} else if err := users.SetServerPermissions(cfg); err != nil {
+		ui.PrintWarning("Error while setting folder permissions: " + err.Error())
+	}
 
 	if cfg.Type == "forge" && version == "link" {
 		cfg.Version, cfg.VersionArg, err = download.ForgeExtractVersionFromForge(versionArg)

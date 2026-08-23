@@ -37,6 +37,9 @@ type Config struct {
 	LevelName          string   `json:"level"`
 	AutomaticRestarts  bool     `json:"autorestart"`
 	StartOnBoot        bool     `json:"boot"`
+	Username           string   `json:"username"`
+	Uid                int      `json:"uid"`
+	Gid                int      `json:"gid"`
 	AdditionalJVMArgs  []string `json:"additionaljvmargs"`
 	AdditionalServArgs []string `json:"additionalservargs"`
 }
@@ -92,3 +95,5 @@ type PaperVersionManifest struct {
 		} `json:"java"`
 	} `json:"version"`
 }
+
+const InvalidNameCharacters = "/\\:?\"<>|"

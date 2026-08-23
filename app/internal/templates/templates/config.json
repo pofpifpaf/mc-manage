@@ -11,6 +11,9 @@
     "level": "world",
     "autorestart": false,
     "boot": false,
+    "username": "",
+    "uid": -1,
+    "gid": -1,
     "additionaljvmargs": [],
     "additionalservargs": []
 }

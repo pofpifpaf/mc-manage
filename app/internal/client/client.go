@@ -18,7 +18,7 @@ import (
 func StartServer(server string) error {
 	valid, server := paths.ValidateServerName(server)
 	if !valid {
-		return fmt.Errorf("Invalid server name")
+		return fmt.Errorf("Invalid server name, server names must not contain %s", protocol.InvalidNameCharacters)
 	}
 	return send(
 		protocol.Request{
@@ -31,7 +31,7 @@ func StartServer(server string) error {
 func StopServer(server string) error {
 	valid, server := paths.ValidateServerName(server)
 	if !valid {
-		return fmt.Errorf("Invalid server name")
+		return fmt.Errorf("Invalid server name, server names must not contain %s", protocol.InvalidNameCharacters)
 	}
 	return send(
 		protocol.Request{
@@ -150,7 +150,7 @@ func SetParameter(args []string) error {
 
 	valid, server := paths.ValidateServerName(server)
 	if !valid {
-		return fmt.Errorf("Invalid server name")
+		return fmt.Errorf("Invalid server name, server names must not contain %s", protocol.InvalidNameCharacters)
 	}
 
 	setForce := false
@@ -448,7 +448,7 @@ func DownloadJarToServer(server, downloadURL string) error {
 
 	valid, server := paths.ValidateServerName(server)
 	if !valid {
-		return fmt.Errorf("Invalid server name")
+		return fmt.Errorf("Invalid server name, server names must not contain %s", protocol.InvalidNameCharacters)
 	}
 
 	fmt.Print("\n")
@@ -472,7 +472,7 @@ func InspectServer(name string) error {
 
 	valid, name := paths.ValidateServerName(name)
 	if !valid {
-		return fmt.Errorf("Invalid server name")
+		return fmt.Errorf("Invalid server name, server names must not contain %s", protocol.InvalidNameCharacters)
 	}
 
 	resp, err := sendProtocol(protocol.Request{
@@ -505,7 +505,7 @@ func KillServer(name string) error {
 
 	valid, name := paths.ValidateServerName(name)
 	if !valid {
-		return fmt.Errorf("Invalid server name")
+		return fmt.Errorf("Invalid server name, server names must not contain %s", protocol.InvalidNameCharacters)
 	}
 
 	return send(protocol.Request{
@@ -537,7 +537,7 @@ func SetProperty(server, key, value string) error {
 
 	valid, server := paths.ValidateServerName(server)
 	if !valid {
-		return fmt.Errorf("Invalid server name")
+		return fmt.Errorf("Invalid server name, server names must not contain %s", protocol.InvalidNameCharacters)
 	}
 
 	if err := config.SetServerProperty(paths.ServerProperties(server), key, value); err != nil {
@@ -555,7 +555,7 @@ func ReloadProperties(server string) error {
 
 	valid, server := paths.ValidateServerName(server)
 	if !valid {
-		return fmt.Errorf("Invalid server name")
+		return fmt.Errorf("Invalid server name, server names must not contain %s", protocol.InvalidNameCharacters)
 	}
 
 	cfg, err := config.Load(server)

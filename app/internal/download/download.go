@@ -9,6 +9,7 @@ import (
 	"minecraft-manager/internal/paths"
 	"minecraft-manager/internal/protocol"
 	"minecraft-manager/internal/ui"
+	"minecraft-manager/internal/users"
 	"net/http"
 	"os"
 	"os/exec"
@@ -104,6 +105,8 @@ func DownloadJar(cfg *protocol.Config) error {
 	} else {
 		ui.PrintInfo("Automatically setting Java Version to " + cfg.Java)
 	}
+
+	users.SetJarPermissions(cfg)
 
 	return nil
 }
