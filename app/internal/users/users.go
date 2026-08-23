@@ -1,6 +1,7 @@
 package users
 
 import (
+	"errors"
 	"fmt"
 	"minecraft-manager/internal/paths"
 	"minecraft-manager/internal/protocol"
@@ -51,6 +52,40 @@ func CreateUser(cfg *protocol.Config) error {
 	ui.PrintSuccess(fmt.Sprintf("Created user %s with uid: %d and gid: %d", cfg.Username, cfg.Uid, cfg.Gid))
 
 	return nil
+}
+
+func createUserGivenUIDGID(cfg *protocol.Config) error {
+
+	ui.PrintInfo(fmt.Sprintf("Creating user %s with uid %d, gid %d", cfg.Username, cfg.Uid, cfg.Gid))
+
+	uidStr := strconv.Itoa(cfg.Uid)
+	gidStr := strconv.Itoa(cfg.Gid)
+
+	cmd := exec.Command(
+		"useradd",
+		"--system",
+		"--no-create-home",
+		"--shell", "/usr/sbin/nologin",
+		"-u", uidStr,
+		"--user-group",
+		cfg.Username,
+	)
+
+	output, err := cmd.CombinedOutput()
+	if err != nil {
+		return fmt.Errorf("useradd failed: %w: %s", err, output)
+	}
+
+	u, err := user.Lookup(cfg.Username)
+	if err != nil {
+		return err
+	}
+
+	if u.Uid == uidStr && u.Gid == gidStr {
+		return nil
+	} else {
+		return fmt.Errorf("Unknown error")
+	}
 }
 
 func RemoveUser(username string) error {
@@ -121,4 +156,40 @@ func SetJarPermissions(cfg *protocol.Config) {
 	if err := os.Chmod(serverJarPath, 0700); err != nil {
 		ui.PrintWarning("couldn't set permissions: " + err.Error())
 	}
+}
+
+func EnsureUserExistence(cfg *protocol.Config) error {
+
+	u, err := user.Lookup(cfg.Username)
+	_, ok := errors.AsType[user.UnknownUserError](err)
+	if err == nil && !ok {
+
+		uid, err := strconv.ParseUint(u.Uid, 10, 32)
+		if err != nil {
+			return err
+		}
+
+		gid, err := strconv.ParseUint(u.Gid, 10, 32)
+		if err != nil {
+			return err
+		}
+
+		if cfg.Uid == int(uid) && cfg.Gid == int(gid) {
+			return nil
+		} else {
+			return fmt.Errorf("User already exists, with different uid/gid")
+		}
+	}
+
+	return createUserGivenUIDGID(cfg)
+}
+
+func EnsureUserExistenceServerInfo(server protocol.ServerInfo) error {
+	var cfg protocol.Config
+
+	cfg.Username = server.Username
+	cfg.Uid = server.Uid
+	cfg.Gid = server.Gid
+
+	return EnsureUserExistence(&cfg)
 }

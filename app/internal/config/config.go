@@ -201,3 +201,20 @@ func SaveMainConfig(cfg *protocol.MainConfig) error {
 
 	return os.WriteFile(path, data, 0644)
 }
+
+func SetConfigUserSpecificFalse(cfg *protocol.Config) {
+	cfg.Username = "disabled"
+	cfg.Uid = -1
+	cfg.Gid = -1
+}
+
+func SetUserSpecificFalse(server string) error {
+	cfg, err := Load(server)
+	if err != nil {
+		return err
+	}
+
+	SetConfigUserSpecificFalse(cfg)
+
+	return Save(server, cfg)
+}

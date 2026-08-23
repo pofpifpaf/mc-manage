@@ -11,7 +11,7 @@
     "level": "world",
     "autorestart": false,
     "boot": false,
-    "username": "",
+    "username": "disabled",
     "uid": -1,
     "gid": -1,
     "additionaljvmargs": [],

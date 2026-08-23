@@ -121,6 +121,9 @@ func MakeList() ([]protocol.ServerInfo, error) {
 			Version:           cfg.Version,
 			JavaVersion:       cfg.Java,
 			StartOnBoot:       cfg.StartOnBoot,
+			Username:          cfg.Username,
+			Uid:               cfg.Uid,
+			Gid:               cfg.Gid,
 		})
 	}
 

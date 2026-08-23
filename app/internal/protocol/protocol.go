@@ -70,6 +70,9 @@ type ServerInfo struct {
 	PlayersOnline     int
 	PlayersOnlineMax  int
 	MemoryUsed        int64
+	Username          string
+	Uid               int
+	Gid               int
 }
 
 type ServerPSResponse struct {

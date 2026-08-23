@@ -72,6 +72,7 @@ func Create(args []string) error {
 
 	if err := users.CreateUser(cfg); err != nil {
 		ui.PrintWarning("Error while creating user : " + err.Error())
+		config.SetConfigUserSpecificFalse(cfg)
 	} else if err := users.SetServerPermissions(cfg); err != nil {
 		ui.PrintWarning("Error while setting folder permissions: " + err.Error())
 	}
@@ -152,6 +153,7 @@ func ImportServer(args []string) error {
 
 	if err := users.CreateUser(cfg); err != nil {
 		ui.PrintWarning("Error while creating user : " + err.Error())
+		config.SetConfigUserSpecificFalse(cfg)
 	} else if err := users.SetServerPermissions(cfg); err != nil {
 		ui.PrintWarning("Error while setting folder permissions: " + err.Error())
 	}
