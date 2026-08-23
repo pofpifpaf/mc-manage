@@ -88,7 +88,24 @@ func createUserGivenUIDGID(cfg *protocol.Config) error {
 	}
 }
 
-func RemoveUser(username string) error {
+func RemoveUser(cfg *protocol.Config) error {
+
+	ui.PrintInfo(fmt.Sprintf("Removing user %s with uid %d, gid %d", cfg.Username, cfg.Uid, cfg.Gid))
+
+	cmd := exec.Command(
+		"userdel",
+		cfg.Username,
+	)
+
+	output, err := cmd.CombinedOutput()
+	if err != nil {
+		return fmt.Errorf("userdel failed: %w: %s", err, output)
+	}
+
+	cfg.Username = "disabled"
+	cfg.Uid = -1
+	cfg.Gid = -1
+
 	return nil
 }
 

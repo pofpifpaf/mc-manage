@@ -3,8 +3,8 @@ package paths
 import (
 	"fmt"
 	"io/fs"
-	"minecraft-manager/internal/protocol"
 	"path/filepath"
+	"regexp"
 	"strings"
 )
 
@@ -51,5 +51,7 @@ func HumanBytes(size int64) string {
 func ValidateServerName(server string) (bool, string) {
 	server, _ = strings.CutSuffix(server, "/")
 
-	return !strings.ContainsAny(server, protocol.InvalidNameCharacters), server
+	var memoryRegex = regexp.MustCompile(`^[a-zA-Z][a-zA-Z0-9_-]*$`)
+
+	return memoryRegex.MatchString(server), server
 }

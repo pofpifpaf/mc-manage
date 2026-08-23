@@ -98,5 +98,3 @@ type PaperVersionManifest struct {
 		} `json:"java"`
 	} `json:"version"`
 }
-
-const InvalidNameCharacters = "/\\:?\"<>|"

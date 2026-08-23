@@ -6,7 +6,6 @@ import (
 	"minecraft-manager/internal/config"
 	"minecraft-manager/internal/download"
 	"minecraft-manager/internal/paths"
-	"minecraft-manager/internal/protocol"
 	"minecraft-manager/internal/templates"
 	"minecraft-manager/internal/ui"
 	"minecraft-manager/internal/users"
@@ -34,7 +33,7 @@ func Create(args []string) error {
 
 	valid, name := paths.ValidateServerName(name)
 	if !valid {
-		return fmt.Errorf("Invalid server name, server names must not contain %s", protocol.InvalidNameCharacters)
+		return fmt.Errorf("Invalid server name %s", name)
 	}
 
 	fmt.Print("\n")
@@ -116,7 +115,7 @@ func ImportServer(args []string) error {
 
 	valid, name := paths.ValidateServerName(name)
 	if !valid {
-		return fmt.Errorf("Invalid server name, server names must not contain %s", protocol.InvalidNameCharacters)
+		return fmt.Errorf("Invalid server name %s", name)
 	}
 
 	fmt.Print("\n")

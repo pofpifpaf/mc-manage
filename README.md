@@ -78,7 +78,7 @@ Additional Server Args  1 - example-argument
 ### Docker run
 
 ```
-docker run -dit \
+docker run --cap-add=SYS_PTRACE -dit \
   --name mc-manager \
   --restart unless-stopped \
   -p 25565:25565 \
@@ -91,6 +91,8 @@ docker run -dit \
 ```
 services:
   mc-manage:
+    cap_add:
+      - SYS_PTRACE
     tty: true
     container_name: mc-manager
     restart: unless-stopped

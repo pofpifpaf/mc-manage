@@ -8,8 +8,10 @@ import (
 	"minecraft-manager/internal/paths"
 	"minecraft-manager/internal/protocol"
 	"minecraft-manager/internal/ui"
+	"minecraft-manager/internal/users"
 	"os"
 	"os/exec"
+	"syscall"
 )
 
 func Build(server string) (*exec.Cmd, bool, string, error) {
@@ -24,6 +26,7 @@ func Build(server string) (*exec.Cmd, bool, string, error) {
 	}
 
 	var cmd *exec.Cmd
+
 	switch cfg.Type {
 	case "neoforge":
 		cmd, err = buildRunSH(cfg, "run.sh")
@@ -51,6 +54,24 @@ func Build(server string) (*exec.Cmd, bool, string, error) {
 		if err != nil {
 			return nil, false, "", err
 		}
+	}
+
+	if cfg.Username != "disabled" && cfg.Uid != -1 && cfg.Gid != -1 {
+
+		if err := users.EnsureUserExistence(cfg); err != nil {
+			ui.PrintWarning("Error while checking user existence for server " + cfg.Name + ": " + err.Error())
+			if err := config.SetUserSpecificFalse(cfg.Name); err != nil {
+				ui.PrintWarning("Error set user false: " + err.Error())
+			}
+		} else {
+			cmd.SysProcAttr = &syscall.SysProcAttr{
+				Credential: &syscall.Credential{
+					Uid: uint32(cfg.Uid),
+					Gid: uint32(cfg.Gid),
+				},
+			}
+		}
+
 	}
 
 	ui.PrintInfo(fmt.Sprintf("Starting %s, with Java Path: %s and Server Directory : %s ", cfg.Name, javaPath, paths.Server(cfg.Name)))

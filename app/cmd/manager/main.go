@@ -1,3 +1,5 @@
+//go:build linux
+
 package main
 
 import (
@@ -37,7 +39,7 @@ func run() error {
 
 	case "create":
 		if len(os.Args) < 5 {
-			return fmt.Errorf("usage: manager create [server] [type] [version]>")
+			return fmt.Errorf("usage: manager create [server] [type] [version]")
 		}
 		return create.Create(os.Args)
 
@@ -183,10 +185,17 @@ func run() error {
 
 	case "reload-prop":
 		if len(os.Args) < 3 {
-			return fmt.Errorf("usage: manager reload [server]")
+			return fmt.Errorf("usage: manager reload-prop [server]")
 		}
 
 		return client.ReloadProperties(os.Args[2])
+
+	case "reload-user":
+		if len(os.Args) < 3 {
+			return fmt.Errorf("usage: manager reload-user [server]")
+		}
+
+		return client.ReloadUser(os.Args[2])
 
 	case "motd":
 

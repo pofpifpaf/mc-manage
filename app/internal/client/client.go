@@ -9,6 +9,7 @@ import (
 	"minecraft-manager/internal/paths"
 	"minecraft-manager/internal/protocol"
 	"minecraft-manager/internal/ui"
+	"minecraft-manager/internal/users"
 	"os"
 	"strconv"
 	"strings"
@@ -18,7 +19,7 @@ import (
 func StartServer(server string) error {
 	valid, server := paths.ValidateServerName(server)
 	if !valid {
-		return fmt.Errorf("Invalid server name, server names must not contain %s", protocol.InvalidNameCharacters)
+		return fmt.Errorf("Invalid server name %s", server)
 	}
 	return send(
 		protocol.Request{
@@ -31,7 +32,7 @@ func StartServer(server string) error {
 func StopServer(server string) error {
 	valid, server := paths.ValidateServerName(server)
 	if !valid {
-		return fmt.Errorf("Invalid server name, server names must not contain %s", protocol.InvalidNameCharacters)
+		return fmt.Errorf("Invalid server name %s", server)
 	}
 	return send(
 		protocol.Request{
@@ -153,7 +154,7 @@ func SetParameter(args []string) error {
 
 	valid, server := paths.ValidateServerName(server)
 	if !valid {
-		return fmt.Errorf("Invalid server name, server names must not contain %s", protocol.InvalidNameCharacters)
+		return fmt.Errorf("Invalid server name %s", server)
 	}
 
 	setForce := false
@@ -451,7 +452,7 @@ func DownloadJarToServer(server, downloadURL string) error {
 
 	valid, server := paths.ValidateServerName(server)
 	if !valid {
-		return fmt.Errorf("Invalid server name, server names must not contain %s", protocol.InvalidNameCharacters)
+		return fmt.Errorf("Invalid server name %s", server)
 	}
 
 	fmt.Print("\n")
@@ -475,7 +476,7 @@ func InspectServer(name string) error {
 
 	valid, name := paths.ValidateServerName(name)
 	if !valid {
-		return fmt.Errorf("Invalid server name, server names must not contain %s", protocol.InvalidNameCharacters)
+		return fmt.Errorf("Invalid server name %s", name)
 	}
 
 	resp, err := sendProtocol(protocol.Request{
@@ -508,7 +509,7 @@ func KillServer(name string) error {
 
 	valid, name := paths.ValidateServerName(name)
 	if !valid {
-		return fmt.Errorf("Invalid server name, server names must not contain %s", protocol.InvalidNameCharacters)
+		return fmt.Errorf("Invalid server name %s", name)
 	}
 
 	return send(protocol.Request{
@@ -540,7 +541,7 @@ func SetProperty(server, key, value string) error {
 
 	valid, server := paths.ValidateServerName(server)
 	if !valid {
-		return fmt.Errorf("Invalid server name, server names must not contain %s", protocol.InvalidNameCharacters)
+		return fmt.Errorf("Invalid server name %s", server)
 	}
 
 	if err := config.SetServerProperty(paths.ServerProperties(server), key, value); err != nil {
@@ -558,7 +559,7 @@ func ReloadProperties(server string) error {
 
 	valid, server := paths.ValidateServerName(server)
 	if !valid {
-		return fmt.Errorf("Invalid server name, server names must not contain %s", protocol.InvalidNameCharacters)
+		return fmt.Errorf("Invalid server name %s", server)
 	}
 
 	cfg, err := config.Load(server)
@@ -577,4 +578,37 @@ func ReloadProperties(server string) error {
 	ui.PrintSuccess("Reload complete")
 
 	return nil
+}
+
+func ReloadUser(server string) error {
+
+	fmt.Print("\n")
+	defer fmt.Print("\n")
+
+	valid, server := paths.ValidateServerName(server)
+	if !valid {
+		return fmt.Errorf("Invalid server name %s", server)
+	}
+
+	cfg, err := config.Load(server)
+	if err != nil {
+		return err
+	}
+
+	if cfg.Username == "disabled" || cfg.Uid == -1 || cfg.Gid == -1 {
+		return fmt.Errorf("Per Server User disabled on this server")
+	}
+
+	if err := users.RemoveUser(cfg); err != nil {
+		ui.PrintWarning("Couldn't remove user: " + err.Error())
+	}
+
+	if err := users.CreateUser(cfg); err != nil {
+		ui.PrintWarning("Error while creating user : " + err.Error())
+		config.SetConfigUserSpecificFalse(cfg)
+	} else if err := users.SetServerPermissions(cfg); err != nil {
+		ui.PrintWarning("Error while setting folder permissions: " + err.Error())
+	}
+
+	return config.Save(cfg.Name, cfg)
 }
