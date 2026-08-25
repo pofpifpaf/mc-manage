@@ -52,6 +52,7 @@ type MainConfig struct {
 type ServerState string
 
 const (
+	StateStopSent ServerState = "stopping"
 	StateStopped  ServerState = "stopped"
 	StateStarting ServerState = "starting"
 	StateRunning  ServerState = "running"

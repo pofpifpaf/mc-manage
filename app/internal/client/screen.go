@@ -17,6 +17,12 @@ import (
 )
 
 func Screen(server string) error {
+
+	valid, server := paths.ValidateServerName(server)
+	if !valid {
+		return fmt.Errorf("Invalid server name %s", server)
+	}
+
 	conn, err := net.Dial("unix", paths.ScreenSocketPath)
 	if err != nil {
 		return fmt.Errorf("connect screen socket: %w", err)

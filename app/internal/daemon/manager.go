@@ -30,6 +30,7 @@ type Server struct {
 	AutomaticRestarts bool
 	StartedAt         time.Time
 	Port              string
+	State             protocol.ServerState
 }
 
 type Manager struct {
@@ -94,7 +95,7 @@ func MakeServerInfo(server *Server) (protocol.ServerInfo, error) {
 		Port:              server.Port,
 		AutomaticRestarts: server.AutomaticRestarts,
 		StartedAt:         server.StartedAt,
-		Running:           protocol.StateRunning,
+		Running:           server.State,
 		Version:           cfg.Version,
 		JavaVersion:       cfg.Java,
 		MemoryUsed:        memoryUsed,
@@ -143,15 +144,16 @@ func (m *Manager) Stop(name string) error {
 	m.mutex.Lock()
 	defer m.mutex.Unlock()
 
-	server, serverExists := m.Get(name)
+	server, serverState := m.Get(name)
 
-	if !serverExists {
+	if serverState == protocol.StateStopped {
 		return fmt.Errorf("Server %s is not running", name)
 	}
 
 	ui.PrintInfo("Stopping server " + name)
 
 	server.AutomaticRestarts = false
+	server.State = protocol.StateStopSent
 	_, err := server.PTY.Write([]byte("\nstop\n"))
 
 	return err
@@ -164,8 +166,8 @@ func (m *Manager) Kill(server string) error {
 
 	ui.PrintInfo(fmt.Sprintf("Sending kill command to server %s", server))
 
-	serv, exist := m.Get(server)
-	if !exist {
+	serv, serverState := m.Get(server)
+	if serverState == protocol.StateStopped {
 		return fmt.Errorf("server is not running")
 	}
 
@@ -219,6 +221,7 @@ func (m *Manager) Start(name string) error {
 		AutomaticRestarts: autorestarts,
 		StartedAt:         time.Now(),
 		Port:              port,
+		State:             protocol.StateRunning,
 	}
 
 	go func() {
@@ -277,10 +280,13 @@ func (m *Manager) Remove(name string) {
 	delete(m.servers, name)
 }
 
-func (m *Manager) Get(name string) (*Server, bool) {
+func (m *Manager) Get(name string) (*Server, protocol.ServerState) {
 
 	server, ok := m.servers[name]
-	return server, ok
+	if !ok {
+		return server, protocol.StateStopped
+	}
+	return server, server.State
 }
 
 func (m *Manager) SetParameter(server string, paramType string, data any) error {

@@ -79,8 +79,8 @@ func (d *Daemon) handleScreenConn(conn net.Conn) {
 		return
 	}
 
-	server, ok := d.manager.Get(req.Server)
-	if !ok {
+	server, serverState := d.manager.Get(req.Server)
+	if serverState == protocol.StateStopped {
 		_ = json.NewEncoder(conn).Encode(protocol.Response{
 			OK:      false,
 			Message: fmt.Sprintf("server %q not running", req.Server),
@@ -131,12 +131,7 @@ func (d *Daemon) handleConnection(conn net.Conn) {
 
 	case "CHECK":
 
-		_, isServerRunning := d.manager.Get(req.Server)
-
-		serverState := protocol.StateStopped
-		if isServerRunning {
-			serverState = protocol.StateRunning
-		}
+		_, serverState := d.manager.Get(req.Server)
 
 		json.NewEncoder(conn).Encode(
 			protocol.Response{
@@ -148,9 +143,9 @@ func (d *Daemon) handleConnection(conn net.Conn) {
 
 	case "INSPECT":
 
-		server, exist := d.manager.Get(req.Server)
+		server, serverState := d.manager.Get(req.Server)
 
-		if !exist {
+		if serverState == protocol.StateStopped {
 			json.NewEncoder(conn).Encode(
 				protocol.Response{
 					OK:      false,

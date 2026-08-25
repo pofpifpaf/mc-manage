@@ -55,6 +55,9 @@ func (d *Daemon) Run() error {
 		if server.StartOnBoot {
 			d.manager.Start(server.Name)
 		}
+		if server.Username == "disabled" || server.Uid == -1 || server.Gid == -1 {
+			continue
+		}
 		if err := users.EnsureUserExistenceServerInfo(server); err != nil {
 			ui.PrintWarning("Error while checking user existence for server " + server.Name + ": " + err.Error())
 			if err := config.SetUserSpecificFalse(server.Name); err != nil {

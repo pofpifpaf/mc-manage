@@ -148,6 +148,8 @@ func PrintInspectServer(server protocol.ServerInfo, cfg *protocol.Config) {
 		fmt.Println("status: " + cGreen + "running" + ansiReset)
 	case protocol.StateStarting:
 		fmt.Println("status: " + cYellow + "starting" + ansiReset)
+	case protocol.StateStopSent:
+		fmt.Println("status: " + cYellow + "stopping" + ansiReset)
 	case protocol.StateStopped:
 		fmt.Println("status: " + cRed + "not running" + ansiReset)
 	}

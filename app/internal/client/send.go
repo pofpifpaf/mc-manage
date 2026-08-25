@@ -119,7 +119,7 @@ func makeServerInfoInterface(data interface{}) (protocol.ServerInfo, error) {
 		return protocol.ServerInfo{}, err
 	}
 
-	if info.Running != protocol.StateStopped {
+	if info.Running != protocol.StateStopped && info.Running != protocol.StateStopSent {
 		info, err = getActivePlayerInformation(info)
 		if err != nil {
 			info.PlayersOnlineMax = -1

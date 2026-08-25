@@ -168,7 +168,8 @@ func SetJarPermissions(cfg *protocol.Config) {
 
 	serverJarPath := paths.Jar(cfg.Name, cfg.Jar)
 	if cfg.Type == "neoforge" || cfg.Type == "forge" {
-		serverJarPath = paths.Jar(cfg.Name, "run.sh")
+		_ = setFolderPermissions(paths.Server(cfg.Name), cfg.Uid, cfg.Gid)
+		return
 	}
 	uid := cfg.Uid
 	gid := cfg.Gid
