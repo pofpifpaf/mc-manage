@@ -37,6 +37,9 @@ type Config struct {
 	LevelName          string   `json:"level"`
 	AutomaticRestarts  bool     `json:"autorestart"`
 	StartOnBoot        bool     `json:"boot"`
+	Username           string   `json:"username"`
+	Uid                int      `json:"uid"`
+	Gid                int      `json:"gid"`
 	AdditionalJVMArgs  []string `json:"additionaljvmargs"`
 	AdditionalServArgs []string `json:"additionalservargs"`
 }
@@ -67,6 +70,9 @@ type ServerInfo struct {
 	PlayersOnline     int
 	PlayersOnlineMax  int
 	MemoryUsed        int64
+	Username          string
+	Uid               int
+	Gid               int
 }
 
 type ServerPSResponse struct {

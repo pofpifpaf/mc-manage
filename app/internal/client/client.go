@@ -9,7 +9,9 @@ import (
 	"minecraft-manager/internal/paths"
 	"minecraft-manager/internal/protocol"
 	"minecraft-manager/internal/ui"
+	"minecraft-manager/internal/users"
 	"os"
+	"os/user"
 	"strconv"
 	"strings"
 	"time"
@@ -18,7 +20,7 @@ import (
 func StartServer(server string) error {
 	valid, server := paths.ValidateServerName(server)
 	if !valid {
-		return fmt.Errorf("Invalid server name")
+		return fmt.Errorf("Invalid server name %s", server)
 	}
 	return send(
 		protocol.Request{
@@ -31,7 +33,7 @@ func StartServer(server string) error {
 func StopServer(server string) error {
 	valid, server := paths.ValidateServerName(server)
 	if !valid {
-		return fmt.Errorf("Invalid server name")
+		return fmt.Errorf("Invalid server name %s", server)
 	}
 	return send(
 		protocol.Request{
@@ -121,6 +123,9 @@ func MakeList() ([]protocol.ServerInfo, error) {
 			Version:           cfg.Version,
 			JavaVersion:       cfg.Java,
 			StartOnBoot:       cfg.StartOnBoot,
+			Username:          cfg.Username,
+			Uid:               cfg.Uid,
+			Gid:               cfg.Gid,
 		})
 	}
 
@@ -150,7 +155,7 @@ func SetParameter(args []string) error {
 
 	valid, server := paths.ValidateServerName(server)
 	if !valid {
-		return fmt.Errorf("Invalid server name")
+		return fmt.Errorf("Invalid server name %s", server)
 	}
 
 	setForce := false
@@ -224,6 +229,22 @@ func SetParameter(args []string) error {
 
 		if err := setMaxMemory(server, arg2); err != nil {
 			return err
+		}
+
+	case "runasroot":
+
+		switch arg2 {
+		case "true":
+			ui.PrintWarning(fmt.Sprintf("Running %s as root: This operation is not recommended", server))
+			if err := config.SetUserSpecificFalse(server); err != nil {
+				return err
+			}
+		case "false":
+			if err := ResumeFromRootConfig(server); err != nil {
+				return err
+			}
+		default:
+			return fmt.Errorf("unrecognized parameter %q, try \"true\"/\"false\"", arg2)
 		}
 
 	default:
@@ -448,7 +469,7 @@ func DownloadJarToServer(server, downloadURL string) error {
 
 	valid, server := paths.ValidateServerName(server)
 	if !valid {
-		return fmt.Errorf("Invalid server name")
+		return fmt.Errorf("Invalid server name %s", server)
 	}
 
 	fmt.Print("\n")
@@ -472,7 +493,7 @@ func InspectServer(name string) error {
 
 	valid, name := paths.ValidateServerName(name)
 	if !valid {
-		return fmt.Errorf("Invalid server name")
+		return fmt.Errorf("Invalid server name %s", name)
 	}
 
 	resp, err := sendProtocol(protocol.Request{
@@ -505,7 +526,7 @@ func KillServer(name string) error {
 
 	valid, name := paths.ValidateServerName(name)
 	if !valid {
-		return fmt.Errorf("Invalid server name")
+		return fmt.Errorf("Invalid server name %s", name)
 	}
 
 	return send(protocol.Request{
@@ -537,7 +558,7 @@ func SetProperty(server, key, value string) error {
 
 	valid, server := paths.ValidateServerName(server)
 	if !valid {
-		return fmt.Errorf("Invalid server name")
+		return fmt.Errorf("Invalid server name %s", server)
 	}
 
 	if err := config.SetServerProperty(paths.ServerProperties(server), key, value); err != nil {
@@ -555,7 +576,7 @@ func ReloadProperties(server string) error {
 
 	valid, server := paths.ValidateServerName(server)
 	if !valid {
-		return fmt.Errorf("Invalid server name")
+		return fmt.Errorf("Invalid server name %s", server)
 	}
 
 	cfg, err := config.Load(server)
@@ -574,4 +595,74 @@ func ReloadProperties(server string) error {
 	ui.PrintSuccess("Reload complete")
 
 	return nil
+}
+
+func ReloadUser(server string) error {
+
+	fmt.Print("\n")
+	defer fmt.Print("\n")
+
+	valid, server := paths.ValidateServerName(server)
+	if !valid {
+		return fmt.Errorf("Invalid server name %s", server)
+	}
+
+	cfg, err := config.Load(server)
+	if err != nil {
+		return err
+	}
+
+	if cfg.Username == "disabled" || cfg.Uid == -1 || cfg.Gid == -1 {
+		return fmt.Errorf("Per Server User disabled on this server")
+	}
+
+	if err := users.RemoveUser(cfg); err != nil {
+		ui.PrintWarning("Couldn't remove user: " + err.Error())
+	}
+
+	if err := users.CreateUser(cfg); err != nil {
+		ui.PrintWarning("Error while creating user : " + err.Error())
+		config.SetConfigUserSpecificFalse(cfg)
+	} else if err := users.SetServerPermissions(cfg); err != nil {
+		ui.PrintWarning("Error while setting folder permissions: " + err.Error())
+	}
+
+	return config.Save(cfg.Name, cfg)
+}
+
+func ResumeFromRootConfig(server string) error {
+	cfg, err := config.Load(server)
+	if err != nil {
+		return err
+	}
+
+	cfg.Username = users.UsernameFromServer(server)
+
+	u, err := user.Lookup(cfg.Username)
+	_, ok := errors.AsType[user.UnknownUserError](err)
+	if ok {
+		if err := users.CreateUser(cfg); err != nil {
+			ui.PrintWarning("Error while creating user : " + err.Error())
+			config.SetConfigUserSpecificFalse(cfg)
+		} else if err := users.SetServerPermissions(cfg); err != nil {
+			ui.PrintWarning("Error while setting folder permissions: " + err.Error())
+		}
+	} else if err == nil {
+		uid, err := strconv.ParseUint(u.Uid, 10, 32)
+		if err != nil {
+			return err
+		}
+
+		gid, err := strconv.ParseUint(u.Gid, 10, 32)
+		if err != nil {
+			return err
+		}
+
+		cfg.Uid = int(uid)
+		cfg.Gid = int(gid)
+	} else {
+		return err
+	}
+
+	return config.Save(cfg.Name, cfg)
 }

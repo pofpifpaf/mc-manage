@@ -10,6 +10,9 @@ import (
 )
 
 func CopyTemplate(destination, serverType string) error {
+
+	ui.PrintInfo("Copying from template " + serverType)
+
 	if err := fs.WalkDir(Files, paths.Templates(serverType), func(path string, d fs.DirEntry, err error) error {
 		if err != nil {
 			return err

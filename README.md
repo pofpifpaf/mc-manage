@@ -23,6 +23,7 @@ Server types available in this version are :
 	- Start/Stop/Kill
 	- Screen
 	- Import
+  - One User Per Server
 - Docker installation, with no docker-in-docker
 - Streamlining argument management
 - Lightweight
@@ -49,6 +50,7 @@ Size              209.4 MiB
 Uptime            1m48s
 Players           0/20
 Memory Used       1.7 GiB
+User              mc-server-name (999/999)
 
 Additional JVM Args     1 - -XX:+AlwaysPreTouch
                         2 - -XX:+DisableExplicitGC
@@ -78,7 +80,7 @@ Additional Server Args  1 - example-argument
 ### Docker run
 
 ```
-docker run -dit \
+docker run --cap-add=SYS_PTRACE -dit \
   --name mc-manager \
   --restart unless-stopped \
   -p 25565:25565 \
@@ -91,6 +93,8 @@ docker run -dit \
 ```
 services:
   mc-manage:
+    cap_add:
+      - SYS_PTRACE
     tty: true
     container_name: mc-manager
     restart: unless-stopped

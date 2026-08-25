@@ -197,6 +197,12 @@ func PrintInspectServer(server protocol.ServerInfo, cfg *protocol.Config) {
 		fmt.Fprintln(w, "Memory Used\t-")
 	}
 
+	if cfg.Username == "disabled" || cfg.Uid == -1 || cfg.Gid == -1 {
+		fmt.Fprintln(w, "User\tNone (Runs as root)")
+	} else {
+		fmt.Fprintf(w, "User\t%s (%d/%d)\n", cfg.Username, cfg.Uid, cfg.Gid)
+	}
+
 	fmt.Fprintln(w, "")
 
 	fmt.Fprint(w, "Additional JVM Args")

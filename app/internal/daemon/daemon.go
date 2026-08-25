@@ -7,6 +7,7 @@ import (
 	"minecraft-manager/internal/paths"
 	"minecraft-manager/internal/templates"
 	"minecraft-manager/internal/ui"
+	"minecraft-manager/internal/users"
 	"os"
 	"os/signal"
 	"syscall"
@@ -53,6 +54,12 @@ func (d *Daemon) Run() error {
 	for _, server := range servers {
 		if server.StartOnBoot {
 			d.manager.Start(server.Name)
+		}
+		if err := users.EnsureUserExistenceServerInfo(server); err != nil {
+			ui.PrintWarning("Error while checking user existence for server " + server.Name + ": " + err.Error())
+			if err := config.SetUserSpecificFalse(server.Name); err != nil {
+				ui.PrintWarning("Error set user false: " + err.Error())
+			}
 		}
 	}
 

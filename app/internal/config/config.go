@@ -47,7 +47,7 @@ func updateAdditionalArgs(server string, fn func(*protocol.Config) error) error 
 
 	valid, server := paths.ValidateServerName(server)
 	if !valid {
-		return fmt.Errorf("Invalid server name")
+		return fmt.Errorf("Invalid server name %s", server)
 	}
 
 	configFilePath := paths.Config(server)
@@ -200,4 +200,21 @@ func SaveMainConfig(cfg *protocol.MainConfig) error {
 	}
 
 	return os.WriteFile(path, data, 0644)
+}
+
+func SetConfigUserSpecificFalse(cfg *protocol.Config) {
+	cfg.Username = "disabled"
+	cfg.Uid = -1
+	cfg.Gid = -1
+}
+
+func SetUserSpecificFalse(server string) error {
+	cfg, err := Load(server)
+	if err != nil {
+		return err
+	}
+
+	SetConfigUserSpecificFalse(cfg)
+
+	return Save(server, cfg)
 }

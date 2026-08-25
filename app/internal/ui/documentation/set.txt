@@ -30,3 +30,6 @@ The different parameters are:
     
     mem-max, xmx, mem-m <string>
             sets the maximum memory of the server
+
+    runasroot <true/false>
+             sets the server to run as root or as a dedicated user. (default is dedicated user)

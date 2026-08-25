@@ -98,6 +98,9 @@ func MakeServerInfo(server *Server) (protocol.ServerInfo, error) {
 		Version:           cfg.Version,
 		JavaVersion:       cfg.Java,
 		MemoryUsed:        memoryUsed,
+		Username:          cfg.Username,
+		Uid:               cfg.Uid,
+		Gid:               cfg.Gid,
 	}
 
 	return serv, nil
