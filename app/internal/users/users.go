@@ -13,9 +13,13 @@ import (
 	"strconv"
 )
 
+func UsernameFromServer(server string) string {
+	return "mc-" + server
+}
+
 func CreateUser(cfg *protocol.Config) error {
 
-	cfg.Username = "mc-" + cfg.Name
+	cfg.Username = UsernameFromServer(cfg.Name)
 
 	cmd := exec.Command(
 		"useradd",

@@ -5,6 +5,8 @@ Correct operation and most commands require a daemon to run in the background.
 
 Server names correspond to the names of the directories under the servers folder (by default, /servers). Each server folder must have a correctly formed config.json file for them to be managed by mc-manage. Use "manager get-sample-cfg" to print a standard config file to stdout.
 
+Creating or importing a new server will create a new user which will have only the appropriate permissions to run the server. In case of error, it can be reloaded or the server can be set to run as root.
+
 GitHub page: https://github.com/pofpifpaf/mc-manage
 
 Server types available in this version are :

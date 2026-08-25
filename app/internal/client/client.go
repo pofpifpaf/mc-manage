@@ -11,6 +11,7 @@ import (
 	"minecraft-manager/internal/ui"
 	"minecraft-manager/internal/users"
 	"os"
+	"os/user"
 	"strconv"
 	"strings"
 	"time"
@@ -228,6 +229,22 @@ func SetParameter(args []string) error {
 
 		if err := setMaxMemory(server, arg2); err != nil {
 			return err
+		}
+
+	case "runasroot":
+
+		switch arg2 {
+		case "true":
+			ui.PrintWarning(fmt.Sprintf("Running %s as root: This operation is not recommended", server))
+			if err := config.SetUserSpecificFalse(server); err != nil {
+				return err
+			}
+		case "false":
+			if err := ResumeFromRootConfig(server); err != nil {
+				return err
+			}
+		default:
+			return fmt.Errorf("unrecognized parameter %q, try \"true\"/\"false\"", arg2)
 		}
 
 	default:
@@ -608,6 +625,43 @@ func ReloadUser(server string) error {
 		config.SetConfigUserSpecificFalse(cfg)
 	} else if err := users.SetServerPermissions(cfg); err != nil {
 		ui.PrintWarning("Error while setting folder permissions: " + err.Error())
+	}
+
+	return config.Save(cfg.Name, cfg)
+}
+
+func ResumeFromRootConfig(server string) error {
+	cfg, err := config.Load(server)
+	if err != nil {
+		return err
+	}
+
+	cfg.Username = users.UsernameFromServer(server)
+
+	u, err := user.Lookup(cfg.Username)
+	_, ok := errors.AsType[user.UnknownUserError](err)
+	if ok {
+		if err := users.CreateUser(cfg); err != nil {
+			ui.PrintWarning("Error while creating user : " + err.Error())
+			config.SetConfigUserSpecificFalse(cfg)
+		} else if err := users.SetServerPermissions(cfg); err != nil {
+			ui.PrintWarning("Error while setting folder permissions: " + err.Error())
+		}
+	} else if err == nil {
+		uid, err := strconv.ParseUint(u.Uid, 10, 32)
+		if err != nil {
+			return err
+		}
+
+		gid, err := strconv.ParseUint(u.Gid, 10, 32)
+		if err != nil {
+			return err
+		}
+
+		cfg.Uid = int(uid)
+		cfg.Gid = int(gid)
+	} else {
+		return err
 	}
 
 	return config.Save(cfg.Name, cfg)
