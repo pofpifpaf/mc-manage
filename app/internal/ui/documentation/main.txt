@@ -85,5 +85,11 @@ Usage: manager [options...]
     list-java
             displays the directories in /opt/java.
 
+    reload-user [server]
+            Recreates user (if it doesn't already exist) and resets permissions for correct user
+        
+   download-mod [server] [url] [mod-name]
+            Downloads the mod at the specified url for the server.
+
     help, --help, ?, -? [type/java]     
             shows this help message. Arguments can access other messages.

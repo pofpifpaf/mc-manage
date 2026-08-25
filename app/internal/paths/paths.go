@@ -71,3 +71,11 @@ func Java(version string) string {
 func Templates(file string) string {
 	return filepath.Join(TemplatesDir, file)
 }
+
+func ModsFolder(name string) string {
+	return filepath.Join(Server(name), "mods")
+}
+
+func Mod(server, name string) string {
+	return filepath.Join(ModsFolder(server), name)
+}

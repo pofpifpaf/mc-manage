@@ -195,6 +195,13 @@ func run() error {
 
 		return client.ReloadUser(os.Args[2])
 
+	case "download-mod":
+		if len(os.Args) < 5 {
+			return fmt.Errorf("usage: manager download-mod [server] [url] [mod-name]")
+		}
+
+		return client.DownloadModToServer(os.Args[2], os.Args[3], os.Args[4])
+
 	case "motd":
 
 		return fmt.Errorf("not yet implemented") // TODO: motd generator
