@@ -79,3 +79,7 @@ func ModsFolder(name string) string {
 func Mod(server, name string) string {
 	return filepath.Join(ModsFolder(server), name)
 }
+
+func World(name, world string) string {
+	return filepath.Join(Server(name), world)
+}

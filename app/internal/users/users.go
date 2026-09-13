@@ -113,7 +113,7 @@ func RemoveUser(cfg *protocol.Config) error {
 	return nil
 }
 
-func setFolderPermissions(directory string, uid, gid int) error {
+func SetFolderPermissions(directory string, uid, gid int) error {
 	entries, err := os.ReadDir(directory)
 	if err != nil {
 		return err
@@ -132,7 +132,7 @@ func setFolderPermissions(directory string, uid, gid int) error {
 		entryPathAbsolute := filepath.Join(directory, entry.Name())
 
 		if entry.IsDir() {
-			if err := setFolderPermissions(entryPathAbsolute, uid, gid); err != nil {
+			if err := SetFolderPermissions(entryPathAbsolute, uid, gid); err != nil {
 				ui.PrintWarning("couldn't set permissions for folder: " + err.Error())
 			}
 			continue
@@ -159,7 +159,7 @@ func SetServerPermissions(cfg *protocol.Config) error {
 
 	ui.PrintInfo("Setting folder permissions for user")
 
-	return setFolderPermissions(serverDir, uid, gid)
+	return SetFolderPermissions(serverDir, uid, gid)
 }
 
 func SetJarPermissions(cfg *protocol.Config) {
@@ -168,7 +168,7 @@ func SetJarPermissions(cfg *protocol.Config) {
 
 	serverJarPath := paths.Jar(cfg.Name, cfg.Jar)
 	if cfg.Type == "neoforge" || cfg.Type == "forge" {
-		_ = setFolderPermissions(paths.Server(cfg.Name), cfg.Uid, cfg.Gid)
+		_ = SetFolderPermissions(paths.Server(cfg.Name), cfg.Uid, cfg.Gid)
 		return
 	}
 	uid := cfg.Uid

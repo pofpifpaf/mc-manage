@@ -9,6 +9,7 @@ import (
 	"minecraft-manager/internal/paths"
 	"minecraft-manager/internal/protocol"
 	"minecraft-manager/internal/ui"
+	"minecraft-manager/internal/users"
 	"os"
 	"strconv"
 	"strings"
@@ -98,7 +99,7 @@ func SetParameter(args []string) error {
 
 	case "world":
 
-		if err := setWorldName(server, arg2); err != nil {
+		if err := setWorldName(server, arg2, arg3); err != nil {
 			return err
 		}
 
@@ -255,12 +256,40 @@ func setJavaVersion(name, javaVersion string) error {
 	}
 }
 
-func setWorldName(name, worldName string) error {
+func setWorldName(name, worldName, perm string) error {
+
+	ui.PrintInfo("Changing World Name")
+
+	worldPath := paths.World(name, worldName)
+
+	if fileInfo, err := os.Stat(paths.World(name, worldName)); err != nil || !fileInfo.IsDir() {
+		return fmt.Errorf("no world directory was found at: %s", worldPath)
+	}
 
 	serverPropertiesPath := paths.ServerProperties(name)
 
 	if fileInfo, err := os.Stat(serverPropertiesPath); err != nil || fileInfo.IsDir() {
 		return fmt.Errorf("unable to set world parameter: server.properties doesn't exist or is a directory")
+	}
+
+	cfg, err := config.Load(name)
+	if err != nil {
+		return err
+	}
+
+	cfg.LevelName = worldName
+
+	if perm != "--no-perm" {
+		ui.PrintInfo("Setting Permissions for folder " + worldPath)
+		if err := users.SetFolderPermissions(worldPath, cfg.Uid, cfg.Gid); err != nil {
+			ui.PrintWarning(err.Error())
+		}
+	} else {
+		ui.PrintInfo("Not changing permissions for folder " + worldPath)
+	}
+
+	if err := config.Save(name, cfg); err != nil {
+		return err
 	}
 
 	return config.SetServerProperty(serverPropertiesPath, config.LevelNamePropertyKey, worldName)

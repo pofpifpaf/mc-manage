@@ -22,8 +22,8 @@ The different parameters are:
     java <string>
             sets the java version to use for the specified server. Possible values are 8/16/21.
     
-    world <string>
-            sets the world name to use for the minecraft server.
+    world <string> <--no-perm/optional>
+            sets the world name to use for the minecraft server. --no-perm doesn't change permissions for the world folder.
     
     mem-allocated, xms, mem-a <string>
             sets the allocated memory of the server
